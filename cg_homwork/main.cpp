@@ -25,6 +25,7 @@ std::mt19937 gen(rd());
 
 std::uniform_int_distribution<int> dis(0, 256);
 std::uniform_int_distribution<int> polyrandom(0, 24);
+std::uniform_int_distribution<int> longnessRandom(5, 20); // longness용 랜덤 (5~20)
 //std::uniform_int_distribution<int> numdis(0, windowWidth - rectspace);
 
 //--- 아래 5개 함수는 사용자 정의 함수 임
@@ -104,6 +105,8 @@ struct BlockData {
 	float longness;     // 길이
 	float blockwidth;       // 너비
 	float blockheight;      // 높이
+	float nowheight;      // 현재 높이
+	float deltaHeight;  // 높이 변화량
 };
 
 // Forward declaration
@@ -130,7 +133,7 @@ public:
 		vertices[4] = v4;
 		vertices[5] = v5;
 		vertices[6] = v6;
-	vertices[7] = v7;
+		vertices[7] = v7;
 	}
 
 	// 육면체의 정점 데이터를 VBO에 추가하는 함수
@@ -369,9 +372,13 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 				static_cast<float>(dis(gen)) / 256.0f
 			); // 랜덤 색상
 			
-			blockGrid[index].longness = 1.0f;
+			int randomLength = longnessRandom(gen); // 5~20 랜덤 정수
+			blockGrid[index].longness = static_cast<float>(randomLength);
+			randomLength = longnessRandom(gen); // 5~20 랜덤 정수
+			blockGrid[index].deltaHeight = static_cast<float>(randomLength) / 20.0f; // longness / 10.0f
 			blockGrid[index].blockwidth = blockWidth;
 			blockGrid[index].blockheight = blockHeight;
+			blockGrid[index].nowheight = 0.1f; // 초기 높이 0.1f
 		}
 	}
 
@@ -554,7 +561,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 				model = glm::translate(model, block.pos);
 				
 				// 2. Scale (크기 조절: blockwidth, longness(높이), blockheight)
-				model = glm::scale(model, glm::vec3(block.blockwidth, block.longness, block.blockheight));
+				model = glm::scale(model, glm::vec3(block.blockwidth, block.nowheight, block.blockheight));
 				
 				// 모델 행렬 전달
 				glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
@@ -596,9 +603,22 @@ void Keyboard(unsigned char key, int x, int y) {
 
 void TimerFunction(int value)
 {
-
-	
-
+	// 모든 블록의 nowheight를 증가시키기
+	for (int z = 0; z < gridHeight; ++z) {
+		for (int x = 0; x < gridWidth; ++x) {
+			BlockData& block = getBlock(x, z);
+			
+			// nowheight가 longness보다 작으면 deltaHeight만큼 증가
+			if (block.nowheight < block.longness) {
+				block.nowheight += block.deltaHeight;
+				
+				// 오버슈팅 방지 (nowheight가 longness를 초과하지 않도록)
+				if (block.nowheight > block.longness) {
+					block.nowheight = block.longness;
+				}
+			}
+		}
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(25, TimerFunction, 1);
