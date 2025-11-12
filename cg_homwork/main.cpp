@@ -36,6 +36,7 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 void setupBuffers();
 void TimerFunction(int value);
+void settingtimerfunc(int value);
 
 //--- 필요한 변수 선언
 GLint width = 1200, height = 800;
@@ -428,7 +429,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene); //--- 출력 콜백 함수
 	glutReshapeFunc(Reshape);
 
-	glutTimerFunc(25, TimerFunction, 1);
+	glutTimerFunc(25, settingtimerfunc, 2); // 초기화 타이머 시작
 
 	glutKeyboardFunc(Keyboard);
 	glutSpecialFunc(SpecialKeys); // 특수 키 콜백 함수 등록
@@ -601,8 +602,10 @@ void Keyboard(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
-void TimerFunction(int value)
+void settingtimerfunc(int value)
 {
+	bool allBlocksFinished = true;
+	
 	// 모든 블록의 nowheight를 증가시키기
 	for (int z = 0; z < gridHeight; ++z) {
 		for (int x = 0; x < gridWidth; ++x) {
@@ -616,9 +619,30 @@ void TimerFunction(int value)
 				if (block.nowheight > block.longness) {
 					block.nowheight = block.longness;
 				}
+				
+				// 아직 완료되지 않은 블록이 있음
+				if (block.nowheight < block.longness) {
+					allBlocksFinished = false;
+				}
 			}
 		}
 	}
+
+	glutPostRedisplay();
+	
+	// 모든 블록이 완료되지 않았으면 계속 실행
+	if (!allBlocksFinished) {
+		glutTimerFunc(25, settingtimerfunc, 2);
+	}
+	else {
+		// 모든 블록이 완료되면 TimerFunction 시작
+		glutTimerFunc(25, TimerFunction, 1);
+	}
+}
+
+void TimerFunction(int value)
+{
+	
 
 	glutPostRedisplay();
 	glutTimerFunc(25, TimerFunction, 1);
