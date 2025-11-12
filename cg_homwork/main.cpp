@@ -15,6 +15,7 @@
 #include <gl/glm/gtc/matrix_transform.hpp>
 
 #define pi 3.14159265358979323846
+#define worldmapsize 50.0f
 
 
 std::random_device rd;
@@ -129,7 +130,7 @@ public:
 		vertices[4] = v4;
 		vertices[5] = v5;
 		vertices[6] = v6;
-		vertices[7] = v7;
+	vertices[7] = v7;
 	}
 
 	// 육면체의 정점 데이터를 VBO에 추가하는 함수
@@ -346,19 +347,31 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	// BlockData 그리드 초기화
 	blockGrid.resize(gridWidth * gridHeight);
 	
+	// 블록 크기 계산
+	float blockWidth = worldmapsize / gridWidth;
+	float blockHeight = worldmapsize / gridHeight;
+	
 	// 각 블록 초기화 (예시: 위치와 색상 설정)
 	for (int z = 0; z < gridHeight; ++z) {
 		for (int x = 0; x < gridWidth; ++x) {
 			int index = getBlockIndex(x, z);
-			blockGrid[index].pos = glm::vec3(x * 2.0f, 0.0f, z * 2.0f); // 2.0f 간격으로 배치
+			
+			// 블록 위치 계산 (그리드 중앙 정렬)
+			blockGrid[index].pos = glm::vec3(
+				x * blockWidth - worldmapsize / 2.0f + blockWidth / 2.0f,
+				0.0f,
+				z * blockHeight - worldmapsize / 2.0f + blockHeight / 2.0f
+			);
+			
 			blockGrid[index].color = glm::vec3(
 				static_cast<float>(dis(gen)) / 256.0f,
 				static_cast<float>(dis(gen)) / 256.0f,
 				static_cast<float>(dis(gen)) / 256.0f
 			); // 랜덤 색상
+			
 			blockGrid[index].longness = 1.0f;
-			blockGrid[index].blockwidth = 1.0f;
-			blockGrid[index].blockheight = 1.0f;
+			blockGrid[index].blockwidth = blockWidth;
+			blockGrid[index].blockheight = blockHeight;
 		}
 	}
 
@@ -400,7 +413,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	whiteCube->sendVertexData(allVertices);
 
 	// 카메라 위치 변경
-	cameraPos = glm::vec3(0.0f, 10.0f, 10.0f);
+	cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);
 	cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	//--- 세이더 프로그램 만들기
@@ -510,12 +523,9 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 	unsigned int viewLocation = glGetUniformLocation(shaderProgramID, "viewTransform");
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
 
-	// 모델 행렬 위치
+	// 모델 행렬과 색상 uniform 위치
 	unsigned int modelLocation = glGetUniformLocation(shaderProgramID, "modelTransform");
-	
-	// 단위 행렬 설정 (변환 없음)
-	glm::mat4 model = glm::mat4(1.0f);
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+	unsigned int colorLocation = glGetUniformLocation(shaderProgramID, "blockcolor");
 
 	// VBO 데이터 바인딩
 	if (!allVertices.empty()) {
@@ -532,8 +542,30 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
-		// 큐브 그리기 (36개 정점 = 12개 삼각형 = 6개 면)
-		glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+		// 모든 블록 그리기
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				const BlockData& block = getBlockConst(x, z);
+				
+				// 모델 행렬 생성: Translate -> Scale 순서로 적용
+				glm::mat4 model = glm::mat4(1.0f);
+				
+				// 1. Translate (위치 이동)
+				model = glm::translate(model, block.pos);
+				
+				// 2. Scale (크기 조절: blockwidth, longness(높이), blockheight)
+				model = glm::scale(model, glm::vec3(block.blockwidth, block.longness, block.blockheight));
+				
+				// 모델 행렬 전달
+				glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+				
+				// 블록 색상 전달
+				glUniform3fv(colorLocation, 1, glm::value_ptr(block.color));
+				
+				// 큐브 그리기 (36개 정점 = 12개 삼각형 = 6개 면)
+				glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+			}
+		}
 
 		glBindVertexArray(0);
 	}
