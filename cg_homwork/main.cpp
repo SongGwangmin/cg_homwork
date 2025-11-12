@@ -676,7 +676,6 @@ void Keyboard(unsigned char key, int x, int y) {
 		std::cout << "상하 움직임 정지\n";
 		break;
 	case '+': // deltaHeight 증가
-	case '=': // + 키 (Shift 없이)
 		for (int z = 0; z < gridHeight; ++z) {
 			for (int x = 0; x < gridWidth; ++x) {
 				BlockData& block = getBlock(x, z);
@@ -686,7 +685,6 @@ void Keyboard(unsigned char key, int x, int y) {
 		std::cout << "deltaHeight 0.1f 증가\n";
 		break;
 	case '-': // deltaHeight 감소
-	case '_': // - 키 (Shift와 함께)
 		for (int z = 0; z < gridHeight; ++z) {
 			for (int x = 0; x < gridWidth; ++x) {
 				BlockData& block = getBlock(x, z);
@@ -699,6 +697,16 @@ void Keyboard(unsigned char key, int x, int y) {
 			}
 		}
 		std::cout << "deltaHeight 0.1f 감소\n";
+		break;
+	case 'v': // nowheight 리셋
+	case 'V':
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				BlockData& block = getBlock(x, z);
+				block.nowheight = 0.1f;
+			}
+		}
+		std::cout << "모든 블록의 nowheight를 0.1f로 리셋\n";
 		break;
 	default:
 		break;
