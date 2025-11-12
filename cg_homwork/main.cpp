@@ -45,6 +45,8 @@ GLuint vertexShader; //--- 버텍스 세이더 객체
 GLuint fragmentShader; //--- 프래그먼트 세이더 객체
 GLuint VAO, VBO; //--- 버텍스 배열 객체, 버텍스 버퍼 객체
 
+int projectionToggle = 1; // 투영 토글 (1: perspective, 0: orthographic)
+int updowntoggle = 0; // 상하 움직임 토글 (0: 정지, 1: 움직임)
 
 glm::mat4 dir;
 // 카메라 변수
@@ -108,6 +110,7 @@ struct BlockData {
 	float blockheight;      // 높이
 	float nowheight;      // 현재 높이
 	float deltaHeight;  // 높이 변화량
+	int velocity;       // 속도 (1 또는 -1)
 };
 
 // Forward declaration
@@ -130,7 +133,7 @@ public:
 		vertices[0] = v0;
 		vertices[1] = v1;
 		vertices[2] = v2;
-		vertices[3] = v3;
+	vertices[3] = v3;
 		vertices[4] = v4;
 		vertices[5] = v5;
 		vertices[6] = v6;
@@ -374,12 +377,13 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 			); // 랜덤 색상
 			
 			int randomLength = longnessRandom(gen); // 5~20 랜덤 정수
-			blockGrid[index].longness = static_cast<float>(randomLength);
+			blockGrid[index].longness = static_cast<float>(randomLength) * 1.5f;
 			randomLength = longnessRandom(gen); // 5~20 랜덤 정수
-			blockGrid[index].deltaHeight = static_cast<float>(randomLength) / 20.0f; // longness / 10.0f
+			blockGrid[index].deltaHeight = static_cast<float>(randomLength) / 20.0f;
 			blockGrid[index].blockwidth = blockWidth;
 			blockGrid[index].blockheight = blockHeight;
 			blockGrid[index].nowheight = 0.1f; // 초기 높이 0.1f
+			blockGrid[index].velocity = (dis(gen) % 2 == 0) ? 1 : -1; // 랜덤 속도 1 또는 -1
 		}
 	}
 
@@ -420,9 +424,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	// 큐브 정점 데이터를 allVertices에 추가
 	whiteCube->sendVertexData(allVertices);
 
-	// 카메라 위치 변경
-	cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);
-	cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+	
 
 	//--- 세이더 프로그램 만들기
 
@@ -518,24 +520,11 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 	// 셰이더 사용
 	glUseProgram(shaderProgramID);
 
-	// 투영 행렬 설정
-	glm::mat4 projection = glm::perspective(
-		glm::radians(30.0f),
-		(float)width / (float)height,
-		0.1f,
-		300.0f
-	);
-	unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projectionTransform");
-	glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
-
-	// 뷰 행렬 설정
-	glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
-	unsigned int viewLocation = glGetUniformLocation(shaderProgramID, "viewTransform");
-	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
-
 	// 모델 행렬과 색상 uniform 위치
 	unsigned int modelLocation = glGetUniformLocation(shaderProgramID, "modelTransform");
 	unsigned int colorLocation = glGetUniformLocation(shaderProgramID, "blockcolor");
+	unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projectionTransform");
+	unsigned int viewLocation = glGetUniformLocation(shaderProgramID, "viewTransform");
 
 	// VBO 데이터 바인딩
 	if (!allVertices.empty()) {
@@ -544,29 +533,106 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		glBufferData(GL_ARRAY_BUFFER, allVertices.size() * sizeof(float),
 			allVertices.data(), GL_STATIC_DRAW);
 
-		
+		// ===== 첫 번째 뷰포트: 전체 화면 (0, 0, 1200, 800) =====
+		glViewport(0, 0, 1200, 800);
+
+		// 카메라 위치 변경
+		cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);
+		cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);
+		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		// 투영 행렬 설정
+		glm::mat4 projection;
+		if (projectionToggle == 1) {
+			// 원근 투영 (Perspective)
+			projection = glm::perspective(
+				glm::radians(30.0f),
+				1200.0f / 800.0f,
+				0.1f,
+				300.0f
+			);
+		}
+		else {
+			// 직교 투영 (Orthographic)
+			float aspectRatio = 1200.0f / 800.0f;
+			float orthoSize = 50.0f;
+			
+			projection = glm::ortho(
+				-orthoSize * aspectRatio,
+				orthoSize * aspectRatio,
+				-orthoSize,
+				orthoSize,
+				0.1f,
+				300.0f
+			);
+		}
+		glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
+
+		// 뷰 행렬 설정
+		glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
 
 		// 모든 블록 그리기
 		for (int z = 0; z < gridHeight; ++z) {
 			for (int x = 0; x < gridWidth; ++x) {
 				const BlockData& block = getBlockConst(x, z);
 				
-				// 모델 행렬 생성: Translate -> Scale 순서로 적용
 				glm::mat4 model = glm::mat4(1.0f);
-				
-				// 1. Translate (위치 이동)
 				model = glm::translate(model, block.pos);
-				
-				// 2. Scale (크기 조절: blockwidth, longness(높이), blockheight)
 				model = glm::scale(model, glm::vec3(block.blockwidth, block.nowheight, block.blockheight));
 				
-				// 모델 행렬 전달
 				glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-				
-				// 블록 색상 전달
 				glUniform3fv(colorLocation, 1, glm::value_ptr(block.color));
 				
-				// 큐브 그리기 (36개 정점 = 12개 삼각형 = 6개 면)
+				glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+			}
+		}
+
+		// ===== 두 번째 뷰포트: 작은 화면 (900, 600, 300, 200) =====
+		glViewport(900, 600, 300, 200);
+		cameraPos = glm::vec3(0.0f, 150.0f, 0.0f); // 카메라 위치 변경
+		cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+		cameraUp = glm::vec3(0.0f, 0.0f, -1.0f); // 카메라 업 벡터 변경
+		// 두 번째 뷰포트용 투영 행렬 (다른 투영 방식 또는 동일)
+		if (projectionToggle == 1) {
+			projection = glm::perspective(
+				glm::radians(30.0f),
+				300.0f / 200.0f,  // 작은 뷰포트의 종횡비
+				0.1f,
+				300.0f
+			);
+		}
+		else {
+			float aspectRatio = 300.0f / 200.0f;
+			float orthoSize = 50.0f;
+			
+			projection = glm::ortho(
+				-orthoSize * aspectRatio,
+				orthoSize * aspectRatio,
+				-orthoSize,
+				orthoSize,
+				0.1f,
+				300.0f
+			);
+		}
+		glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
+
+		// 두 번째 뷰포트용 뷰 행렬 (같은 카메라 또는 다른 각도)
+		view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
+
+		// 모든 블록 다시 그리기
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				const BlockData& block = getBlockConst(x, z);
+				
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, block.pos);
+				model = glm::scale(model, glm::vec3(block.blockwidth, block.nowheight, block.blockheight));
+				
+				glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+				glUniform3fv(colorLocation, 1, glm::value_ptr(block.color));
+				
 				glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
 			}
 		}
@@ -590,6 +656,24 @@ void Keyboard(unsigned char key, int x, int y) {
 		break;
 	case 'Q': // 프로그램 종료
 		glutLeaveMainLoop();
+		break;
+	case 'p': // Perspective 투영
+	case 'P':
+		projectionToggle = 1;
+		std::cout << "Perspective 투영 모드\n";
+		break;
+	case 'o': // Orthographic 투영
+	case 'O':
+		projectionToggle = 0;
+		std::cout << "Orthographic 투영 모드\n";
+		break;
+	case 'm': // 상하 움직임 시작
+		updowntoggle = 1;
+		std::cout << "상하 움직임 시작\n";
+		break;
+	case 'M': // 상하 움직임 정지
+		updowntoggle = 0;
+		std::cout << "상하 움직임 정지\n";
 		break;
 	default:
 		break;
@@ -638,7 +722,29 @@ void settingtimerfunc(int value)
 
 void TimerFunction(int value)
 {
-	
+	// updowntoggle이 켜져있으면 블록들을 상하로 움직임
+	if (updowntoggle == 1) {
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				BlockData& block = getBlock(x, z);
+				
+				// nowheight에 deltaHeight * velocity를 더함
+				block.nowheight += block.deltaHeight * block.velocity;
+				
+				// 상한선 체크: 30.0f를 넘으면
+				if (block.nowheight > 30.0f) {
+					block.nowheight = 30.0f;
+					block.velocity = -1; // 방향 반전
+				}
+				
+				// 하한선 체크: 0.0f 밑으로 가면
+				if (block.nowheight < 0.0f) {
+					block.nowheight = 0.0f;
+					block.velocity = 1; // 방향 반전
+				}
+			}
+		}
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(25, TimerFunction, 1);
