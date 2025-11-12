@@ -675,6 +675,31 @@ void Keyboard(unsigned char key, int x, int y) {
 		updowntoggle = 0;
 		std::cout << "상하 움직임 정지\n";
 		break;
+	case '+': // deltaHeight 증가
+	case '=': // + 키 (Shift 없이)
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				BlockData& block = getBlock(x, z);
+				block.deltaHeight += 0.1f;
+			}
+		}
+		std::cout << "deltaHeight 0.1f 증가\n";
+		break;
+	case '-': // deltaHeight 감소
+	case '_': // - 키 (Shift와 함께)
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				BlockData& block = getBlock(x, z);
+				block.deltaHeight -= 0.1f;
+				
+				// 음수가 되면 0.0f로 설정
+				if (block.deltaHeight < 0.0f) {
+					block.deltaHeight = 0.0f;
+				}
+			}
+		}
+		std::cout << "deltaHeight 0.1f 감소\n";
+		break;
 	default:
 		break;
 	}
