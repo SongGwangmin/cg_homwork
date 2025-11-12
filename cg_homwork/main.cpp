@@ -437,6 +437,8 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutMotionFunc(Motion); // 마우스 모션 콜백 함수 등록
 	glutPassiveMotionFunc(Mousemove); // 마우스 이동 콜백 함수 등록 (버튼 누르지 않고 이동)
 
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 	glutMainLoop();
 	return 0;
 }
@@ -542,13 +544,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		glBufferData(GL_ARRAY_BUFFER, allVertices.size() * sizeof(float),
 			allVertices.data(), GL_STATIC_DRAW);
 
-		// 와이어프레임 모드 설정
-		if (0) {
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		}
-		else {
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		}
+		
 
 		// 모든 블록 그리기
 		for (int z = 0; z < gridHeight; ++z) {
