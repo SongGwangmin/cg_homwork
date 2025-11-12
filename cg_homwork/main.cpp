@@ -47,10 +47,11 @@ GLuint VAO, VBO; //--- 버텍스 배열 객체, 버텍스 버퍼 객체
 
 int projectionToggle = 1; // 투영 토글 (1: perspective, 0: orthographic)
 int updowntoggle = 0; // 상하 움직임 토글 (0: 정지, 1: 움직임)
+float cameraAngleY = 0.0f; // 카메라 Y축 회전 각도
 
 glm::mat4 dir;
 // 카메라 변수
-glm::vec3 cameraPos = glm::vec3(0.0f, 50.0f, 50.0f);      // 카메라 위치
+glm::vec3 cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);      // 카메라 위치
 glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);      // 카메라 타겟
 
 
@@ -537,7 +538,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		glViewport(0, 0, 1200, 800);
 
 		// 카메라 위치 변경
-		cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);
+		
 		cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -590,8 +591,8 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 
 		// ===== 두 번째 뷰포트: 작은 화면 (900, 600, 300, 200) =====
 		glViewport(900, 600, 300, 200);
-		cameraPos = glm::vec3(0.0f, 150.0f, 0.0f); // 카메라 위치 변경
-		cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::vec3 upcameraPos = glm::vec3(0.0f, 150.0f, 0.0f); // 카메라 위치 변경
+		glm::vec3 upcameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
 		cameraUp = glm::vec3(0.0f, 0.0f, -1.0f); // 카메라 업 벡터 변경
 		// 두 번째 뷰포트용 투영 행렬 (다른 투영 방식 또는 동일)
 		if (projectionToggle == 1) {
@@ -618,7 +619,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
 		// 두 번째 뷰포트용 뷰 행렬 (같은 카메라 또는 다른 각도)
-		view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+		view = glm::lookAt(upcameraPos, upcameraTarget, cameraUp);
 		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
 
 		// 모든 블록 다시 그리기
@@ -707,6 +708,20 @@ void Keyboard(unsigned char key, int x, int y) {
 			}
 		}
 		std::cout << "모든 블록의 nowheight를 0.1f로 리셋\n";
+		break;
+	case 'y': // Y축 양의 방향으로 5도 회전
+		{
+			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			cameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
+			std::cout << "카메라 Y축 +5도 회전\n";
+		}
+		break;
+	case 'Y': // Y축 음의 방향으로 5도 회전
+		{
+			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			cameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
+			std::cout << "카메라 Y축 -5도 회전\n";
+		}
 		break;
 	default:
 		break;
