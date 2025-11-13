@@ -540,6 +540,10 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		// 카메라 위치 변경
 		
 		cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);
+
+		glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(cameraAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::vec3 tcameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
+
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 		// 투영 행렬 설정
@@ -570,7 +574,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
 		// 뷰 행렬 설정
-		glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+		glm::mat4 view = glm::lookAt(tcameraPos, cameraTarget, cameraUp);
 		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
 
 		// 모든 블록 그리기
@@ -711,16 +715,14 @@ void Keyboard(unsigned char key, int x, int y) {
 		break;
 	case 'y': // Y축 양의 방향으로 5도 회전
 		{
-			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			cameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
-			std::cout << "카메라 Y축 +5도 회전\n";
+		cameraAngleY += 5.0f;
+		std::cout << "카메라 Y축 +5도 회전\n";
 		}
 		break;
 	case 'Y': // Y축 음의 방향으로 5도 회전
 		{
-			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			cameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
-			std::cout << "카메라 Y축 -5도 회전\n";
+		cameraAngleY -= 5.0f;
+		std::cout << "카메라 Y축 -5도 회전\n";
 		}
 		break;
 	default:
