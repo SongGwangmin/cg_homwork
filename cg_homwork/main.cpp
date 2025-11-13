@@ -55,6 +55,12 @@ glm::vec3 cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);      // 카메라 위치
 glm::vec3 cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);      // 카메라 타겟
 
 
+// 가로, 세로 개수 전역 변수
+int gridWidth = 0;
+int gridHeight = 0;
+
+std::vector<std::vector<int>> map;
+
 // AABB 구조체 정의
 struct AABB {
 	glm::vec3 min;  // 최소 좌표 (왼쪽 아래 뒤)
@@ -136,6 +142,59 @@ void shuffleDirections() {
 // 미로 생성 함수
 void makeMaze(mazepos start) {
 	// TODO: 미로 생성 로직 구현
+	std::vector<mazepos> stack;
+	stack.clear();
+	stack.push_back(start);
+
+	while (!stack.empty()) {
+		mazepos current = stack.back();
+
+		// 상하좌우 검사하기
+		int cnt = 0;
+
+		for (const auto& dir : directions) {
+			mazepos next = { current.x + dir.x, current.y + dir.y};
+			// 범위 내에 있고, 아직 방문하지 않은 셀인지 확인
+			if (0 <= next.x && next.x <= gridWidth - 1 && 0 <= next.y  && next.y <= gridHeight - 1) {
+				if (map[next.y][next.x] == 1) { // 벽인 경우
+					
+				}
+				else {
+					cnt++;
+				}
+			}
+			else { // 범위 밖
+				cnt++;
+			}
+		}
+
+		if (1 < cnt) { // 이미 빈곳이나 범위 밖이 2개 이상이면 continue
+			stack.pop_back();
+			continue;
+			
+
+		}
+		else { // 허용되지 않은 공간이 하나밖에 없다 == 이전에 온 길만 허용되지 않는 길이다.
+			stack.pop_back();
+			// 현재 위치를 빈 공간으로 설정
+			map[current.y][current.x] = 0;
+			// 섞인 방향 벡터를 사용하여 상하좌우로 이동
+			for (const auto& dir : directions) {
+				mazepos next = { current.x + dir.x, current.y + dir.y};
+				// 범위 내에 있고, 아직 방문하지 않은 셀인지 확인
+				if (0 < next.x && next.x < gridWidth - 1 && 0 < next.y  && next.y < gridHeight - 1) {
+					if (map[next.y][next.x] == 1) { // 벽인 경우
+						stack.push_back(next);
+					}
+				}
+			}
+
+			shuffleDirections(); // 방향 벡터 섞기 - 순서는 랜덤하게 해야 재밌으니까
+		}
+
+
+	}
+
 }
 
 // Forward declaration
@@ -306,9 +365,7 @@ void setupBuffers() {
 	glBindVertexArray(0);
 }
 
-// 가로, 세로 개수 전역 변수
-int gridWidth = 0;
-int gridHeight = 0;
+
 
 // BlockData 2D 배열을 1D 벡터로 저장
 std::vector<BlockData> blockGrid;
@@ -331,7 +388,7 @@ inline const BlockData& getBlockConst(int x, int z) {
 	return blockGrid[getBlockIndex(x, z)];
 }
 
-std::vector<std::vector<int>> map;
+
 
 // 숫자 입력 받기 함수
 bool getValidInput(const char* prompt, int& value) {
