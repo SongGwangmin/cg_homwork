@@ -48,6 +48,7 @@ GLuint VAO, VBO; //--- 버텍스 배열 객체, 버텍스 버퍼 객체
 
 int projectionToggle = 1; // 투영 토글 (1: perspective, 0: orthographic)
 int updowntoggle = 0; // 상하 움직임 토글 (0: 정지, 1: 움직임)
+int runnertoggle = 0; // 캐릭터 표시 토글 (0: 숨김, 1: 표시)
 float cameraAngleY = 0.0f; // 카메라 Y축 회전 각도
 
 glm::mat4 dir;
@@ -108,6 +109,9 @@ struct Player {
 
 // Player 전역 변수
 Player player;
+
+glm::mat4 yrote;
+float armangle = 0.0f;
 
 // BlockData 구조체 정의
 struct BlockData {
@@ -214,6 +218,25 @@ void makeMaze(mazepos start) {
 	std::cout << "미로 생성 소요 시간: " << duration.count() << " 마이크로초 (";
 	std::cout << duration.count() / 1000.0 << " 밀리초)" << std::endl;
 
+	// 미로 생성이 완료되면 캐릭터 표시
+	runnertoggle = 1;
+
+}
+
+// 플레이어 위치 설정 함수
+void setPlayerPos() {
+	std::uniform_int_distribution<int> xDis(1, gridWidth - 2);
+	std::uniform_int_distribution<int> yDis(1, gridHeight - 2);
+	
+	int randomX, randomY;
+	
+	// map[randomY][randomX]가 0인 위치를 찾을 때까지 반복
+	do {
+		randomX = xDis(gen);
+		randomY = yDis(gen);
+	} while (map[randomY][randomX] != 0);
+	
+	// TODO: 플레이어 위치를 설정하는 코드 추가
 }
 
 // Forward declaration
@@ -546,6 +569,32 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	// 큐브 정점 데이터를 allVertices에 추가
 	whiteCube->sendVertexData(allVertices);
 
+	// 플레이어 육면체 등록
+	Cube playerbodyCube(
+		glm::vec3(-4.0f, -4.0f, -4.0f), // v0: 앞면 왼쪽 아래
+		glm::vec3(4.0f, -4.0f, -4.0f),  // v1: 앞면 오른쪽 아래
+		glm::vec3(4.0f, -4.0f, 4.0f),   // v2: 앞면 오른쪽 위
+		glm::vec3(-4.0f, -4.0f, 4.0f),  // v3: 앞면 왼쪽 위
+		glm::vec3(-4.0f, 4.0f, -4.0f),  // v4: 뒷면 왼쪽 아래
+		glm::vec3(4.0f, 4.0f, -4.0f),   // v5: 뒷면 오른쪽 아래
+		glm::vec3(4.0f, 4.0f, 4.0f),    // v6: 뒷면 오른쪽 위
+		glm::vec3(-4.0f, 4.0f, 4.0f),   // v7: 뒷면 왼쪽 위
+		glm::vec3(0.0f, 1.0f, 0.0f)     // 초록
+	);
+	playerbodyCube.sendVertexData(allVertices);
+
+	Cube stickCube(
+		glm::vec3(-4.0f, -4.0f, -4.0f), // v0: 앞면 왼쪽 아래
+		glm::vec3(4.0f, -4.0f, -4.0f),  // v1: 앞면 오른쪽 아래
+		glm::vec3(4.0f, -4.0f, 4.0f),   // v2: 앞면 오른쪽 위
+		glm::vec3(-4.0f, -4.0f, 4.0f),  // v3: 앞면 왼쪽 위
+		glm::vec3(-4.0f, 0.0f, -4.0f),  // v4: 뒷면 왼쪽 아래
+		glm::vec3(4.0f, 0.0f, -4.0f),   // v5: 뒷면 오른쪽 아래
+		glm::vec3(4.0f, 0.0f, 4.0f),    // v6: 뒷면 오른쪽 위
+		glm::vec3(-4.0f, 0.0f, 4.0f),   // v7: 뒷면 왼쪽 위
+		glm::vec3(0.5f, 0.0f, 0.0f)     // 초록
+	);
+	stickCube.sendVertexData(allVertices);
 	
 
 	//--- 세이더 프로그램 만들기
@@ -660,7 +709,8 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 
 		// 카메라 위치 변경
 		
-
+		glm::mat4 model;
+		
 
 		glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(cameraAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::vec3 tcameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
@@ -715,6 +765,10 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 				}
 			}
 		}
+
+
+
+		
 
 		// ===== 두 번째 뷰포트: 작은 화면 (900, 600, 300, 200) =====
 		glViewport(900, 600, 300, 200);
