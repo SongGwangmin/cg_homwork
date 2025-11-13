@@ -111,6 +111,7 @@ Player player;
 
 // BlockData 구조체 정의
 struct BlockData {
+	AABB boundingBox; // AABB 경계 상자
 	glm::vec3 pos;      // 위치
 	glm::vec3 color;    // 색상
 	float longness;     // 길이
@@ -477,7 +478,8 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 				0.0f,
 				z * blockHeight - worldmapsize / 2.0f + blockHeight / 2.0f
 			);
-			
+
+
 			blockGrid[index].color = glm::vec3(
 				static_cast<float>(dis(gen)) / 256.0f,
 				static_cast<float>(dis(gen)) / 256.0f,
@@ -492,6 +494,18 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 			blockGrid[index].blockheight = blockHeight;
 			blockGrid[index].nowheight = 0.1f; // 초기 높이 0.1f
 			blockGrid[index].velocity = (dis(gen) % 2 == 0) ? 1 : -1; // 랜덤 속도 1 또는 -1
+
+
+			blockGrid[index].boundingBox.min = glm::vec3(
+				blockGrid[index].pos.x - blockWidth / 2.0f,
+				0.0f,
+				blockGrid[index].pos.z - blockHeight / 2.0f
+			);
+			blockGrid[index].boundingBox.max = glm::vec3(
+				blockGrid[index].pos.x + blockWidth / 2.0f,
+				blockGrid[index].longness,
+				blockGrid[index].pos.z + blockHeight / 2.0f
+			);
 		}
 	}
 
