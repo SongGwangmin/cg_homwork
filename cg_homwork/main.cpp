@@ -114,6 +114,11 @@ struct BlockData {
 	int velocity;       // 속도 (1 또는 -1)
 };
 
+struct mazepos {
+	int x;
+	int y;
+};
+
 // Forward declaration
 class polygon;
 std::vector<float> allVertices;
@@ -782,31 +787,47 @@ void Keyboard(unsigned char key, int x, int y) {
 			}
 
 		}
-
+		mazepos startpos;
 		// 첫 구멍파기
 		switch (selection) {
 		case 0: // 위
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridWidth - 2);
-			map[0][firstdis(gen)] = 0;
+			
+			startpos.x = firstdis(gen);
+			startpos.y = 0;
+
+			map[startpos.y][startpos.x] = 0;
 		}
 			break;
 		case 1: // 아래
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridWidth - 2);
-			map[gridHeight - 1][firstdis(gen)] = 0;
+			
+			startpos.x = firstdis(gen);
+			startpos.y = gridHeight - 1;
+
+			map[startpos.y][startpos.x] = 0;
 		}
 			break;
 		case 2:// 왼쪽
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridHeight - 2);
-			map[firstdis(gen)][0] = 0;
+			
+			startpos.x = 0;
+			startpos.y = firstdis(gen);
+
+			map[startpos.y][startpos.x] = 0;
 		}
 			break;
 		case 3: // 오른쪽
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridHeight - 2);
-			map[firstdis(gen)][gridWidth - 1] = 0;
+			
+			startpos.x = gridWidth - 1;
+			startpos.y = firstdis(gen);
+
+			map[startpos.y][startpos.x] = 0;
 		}
 			break;
 		}
