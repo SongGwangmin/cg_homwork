@@ -307,6 +307,8 @@ inline const BlockData& getBlockConst(int x, int z) {
 	return blockGrid[getBlockIndex(x, z)];
 }
 
+std::vector<std::vector<int>> map;
+
 // 숫자 입력 받기 함수
 bool getValidInput(const char* prompt, int& value) {
 	std::cout << prompt;
@@ -351,6 +353,12 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
 	// 가로, 세로 개수 입력받기
 	getGridDimensions();
+
+	// map을 gridWidth * gridHeight 크기의 2차원 배열로 초기화
+	map.resize(gridHeight);
+	for (int i = 0; i < gridHeight; ++i) {
+		map[i].resize(gridWidth, 1); // 각 행을 gridWidth 크기로 초기화하고 1로 채움
+	}
 
 	// BlockData 그리드 초기화
 	blockGrid.resize(gridWidth * gridHeight);
@@ -589,7 +597,9 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 				glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 				glUniform3fv(colorLocation, 1, glm::value_ptr(block.color));
 				
-				glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+				if (map[z][x]) {
+					glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+				}
 			}
 		}
 
@@ -638,7 +648,9 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 				glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 				glUniform3fv(colorLocation, 1, glm::value_ptr(block.color));
 				
-				glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+				if (map[z][x]) {
+					glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+				}
 			}
 		}
 
@@ -758,8 +770,48 @@ void Keyboard(unsigned char key, int x, int y) {
 			std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
 		}
 		break;
+	case 'r':
+	case 'R':
+	{
+		int selection = dis(gen) % 4;
 
+		// map을 gridWidth * gridHeight 크기의 2차원 배열로 초기화
+		for (int i = 0; i < gridHeight; ++i) {
+			for(int j = 0; j < gridWidth; ++j) {
+				map[i][j] = 1;
+			}
 
+		}
+
+		// 첫 구멍파기
+		switch (selection) {
+		case 0: // 위
+		{
+			std::uniform_int_distribution<int> firstdis(1, gridWidth - 2);
+			map[0][firstdis(gen)] = 0;
+		}
+			break;
+		case 1: // 아래
+		{
+			std::uniform_int_distribution<int> firstdis(1, gridWidth - 2);
+			map[gridHeight - 1][firstdis(gen)] = 0;
+		}
+			break;
+		case 2:// 왼쪽
+		{
+			std::uniform_int_distribution<int> firstdis(1, gridHeight - 2);
+			map[firstdis(gen)][0] = 0;
+		}
+			break;
+		case 3: // 오른쪽
+		{
+			std::uniform_int_distribution<int> firstdis(1, gridHeight - 2);
+			map[firstdis(gen)][gridWidth - 1] = 0;
+		}
+			break;
+		}
+	}
+		break;
 	default:
 		break;
 	}
