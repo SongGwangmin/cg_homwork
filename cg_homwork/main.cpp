@@ -10,6 +10,7 @@
 #include <list>
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <gl/glm/glm.hpp>
 #include <gl/glm/ext.hpp>
 #include <gl/glm/gtc/matrix_transform.hpp>
@@ -131,12 +132,12 @@ std::vector<mazepos> directions = {{0, -1}, {-1, 0}, {1, 0}, {0, 1}};
 // 방향 벡터를 섞는 함수
 void shuffleDirections() {
 	std::shuffle(directions.begin(), directions.end(), gen);
-	std::cout << "방향 벡터가 섞였습니다.\n";
+	/*std::cout << "방향 벡터가 섞였습니다.\n";
 	std::cout << "섞인 순서: ";
 	for (const auto& dir : directions) {
 		std::cout << "(" << dir.x << "," << dir.y << ") ";
 	}
-	std::cout << "\n";
+	std::cout << "\n";*/
 }
 
 // 미로 생성 함수
@@ -145,6 +146,8 @@ void makeMaze(mazepos start) {
 	std::vector<mazepos> stack;
 	stack.clear();
 	stack.push_back(start);
+
+	auto startTime = std::chrono::high_resolution_clock::now();
 
 	while (!stack.empty()) {
 		mazepos current = stack.back();
@@ -182,18 +185,33 @@ void makeMaze(mazepos start) {
 			for (const auto& dir : directions) {
 				mazepos next = { current.x + dir.x, current.y + dir.y};
 				// 범위 내에 있고, 아직 방문하지 않은 셀인지 확인
-				if (0 < next.x && next.x < gridWidth - 1 && 0 < next.y  && next.y < gridHeight - 1) {
+				// 검사 후 push 62만 마이크로초 12 * 13은 12만
+				// io 속도때문에 아래의 속도가 나왔고, 300 ~ 450, 12 * 13은 70 ~ 110마이크로초
+				/*if (0 < next.x && next.x < gridWidth - 1 && 0 < next.y  && next.y < gridHeight - 1) {
 					if (map[next.y][next.x] == 1) { // 벽인 경우
 						stack.push_back(next);
 					}
-				}
+				}*/
+
+				// 속도비교를 위한 그냥 push 얘도 62만 마이크로초 12 * 13은 12만
+				// io없으면 350 ~ 550 마이크로초 12 * 13은 80 ~ 120마이크로초
+				stack.push_back(next);
 			}
+
+			
 
 			shuffleDirections(); // 방향 벡터 섞기 - 순서는 랜덤하게 해야 재밌으니까
 		}
 
 
 	}
+
+
+	auto endTime = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+
+	std::cout << "미로 생성 소요 시간: " << duration.count() << " 마이크로초 (";
+	std::cout << duration.count() / 1000.0 << " 밀리초)" << std::endl;
 
 }
 
