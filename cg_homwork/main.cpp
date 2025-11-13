@@ -133,6 +133,11 @@ void shuffleDirections() {
 	std::cout << "\n";
 }
 
+// 미로 생성 함수
+void makeMaze(mazepos start) {
+	// TODO: 미로 생성 로직 구현
+}
+
 // Forward declaration
 class polygon;
 std::vector<float> allVertices;
@@ -803,8 +808,8 @@ void Keyboard(unsigned char key, int x, int y) {
 			for(int j = 0; j < gridWidth; ++j) {
 				map[i][j] = 1;
 			}
-
 		}
+		
 		mazepos startpos;
 		// 첫 구멍파기
 		switch (selection) {
@@ -849,6 +854,9 @@ void Keyboard(unsigned char key, int x, int y) {
 		}
 			break;
 		}
+		
+		// 미로 생성 함수 호출
+		makeMaze(startpos);
 	}
 		break;
 	default:
