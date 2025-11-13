@@ -119,6 +119,20 @@ struct mazepos {
 	int y;
 };
 
+// 방향 벡터 (상, 좌, 우, 하)
+std::vector<mazepos> directions = {{0, -1}, {-1, 0}, {1, 0}, {0, 1}};
+
+// 방향 벡터를 섞는 함수
+void shuffleDirections() {
+	std::shuffle(directions.begin(), directions.end(), gen);
+	std::cout << "방향 벡터가 섞였습니다.\n";
+	std::cout << "섞인 순서: ";
+	for (const auto& dir : directions) {
+		std::cout << "(" << dir.x << "," << dir.y << ") ";
+	}
+	std::cout << "\n";
+}
+
 // Forward declaration
 class polygon;
 std::vector<float> allVertices;
@@ -774,6 +788,10 @@ void Keyboard(unsigned char key, int x, int y) {
 			
 			std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
 		}
+		break;
+	case 'g': // 방향 벡터 섞기
+	case 'G':
+		shuffleDirections();
 		break;
 	case 'r':
 	case 'R':
