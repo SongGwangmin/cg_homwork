@@ -52,7 +52,7 @@ float cameraAngleY = 0.0f; // 카메라 Y축 회전 각도
 glm::mat4 dir;
 // 카메라 변수
 glm::vec3 cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);      // 카메라 위치
-glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);      // 카메라 타겟
+glm::vec3 cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);      // 카메라 타겟
 
 
 // AABB 구조체 정의
@@ -539,11 +539,11 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 
 		// 카메라 위치 변경
 		
-		cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);
+
 
 		glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(cameraAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::vec3 tcameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
-
+		glm::vec3 tcameraTarget = glm::vec3(rotationMatrix * glm::vec4(cameraTarget, 1.0f));
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 		// 투영 행렬 설정
@@ -725,6 +725,41 @@ void Keyboard(unsigned char key, int x, int y) {
 		std::cout << "카메라 Y축 -5도 회전\n";
 		}
 		break;
+	case 'z':
+	{
+		cameraPos.z += 5.0f;
+		//cameraTarget.z += 5.0f;
+	}
+	break;
+	case 'Z':
+		{
+		cameraPos.z -= 5.0f;
+		//cameraTarget.z -= 5.0f;
+	}
+		break;
+	case 'c': // 초기화
+	case 'C':
+		{
+			// 카메라 초기화
+			cameraAngleY = 0.0f;
+			cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);
+			
+			// 모든 블록의 nowheight를 longness로 설정
+			for (int z = 0; z < gridHeight; ++z) {
+				for (int x = 0; x < gridWidth; ++x) {
+					BlockData& block = getBlock(x, z);
+					block.nowheight = block.longness;
+				}
+			}
+			
+			// updowntoggle 끄기
+			updowntoggle = 0;
+			
+			std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
+		}
+		break;
+
+
 	default:
 		break;
 	}
