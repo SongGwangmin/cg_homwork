@@ -105,8 +105,8 @@ struct Player {
 	// AABB 계산 함수
 	AABB getAABB() const {
 		AABB box;
-		box.min = centerPos - size / 2.0f;  // 중심에서 반 크기만큼 빼기
-		box.max = centerPos + size / 2.0f;  // 중심에서 반 크기만큼 더하기
+		box.min = centerPos - size * 4.0f;  // 중심에서 반 크기만큼 빼기
+		box.max = centerPos + size * 4.0f;  // 중심에서 반 크기만큼 더하기
 		return box;
 	}
 };
