@@ -1186,13 +1186,25 @@ void Keyboard(unsigned char key, int x, int y) {
 				for (int x = 0; x < gridWidth; ++x) {
 					BlockData& block = getBlock(x, z);
 					block.nowheight = block.longness;
+					map[z][x] = 1;
+
 				}
 			}
 			
 			// updowntoggle 끄기
 			updowntoggle = 0;
 			
+			// 토글들 끄기
+			mapsettoggle = 0;
+			runnerToggle = 0;
+			projectionToggle = 1;
+			viewMode = 3;
+
+
 			std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
+
+
+
 		}
 		break;
 	case 'g': // 방향 벡터 섞기
