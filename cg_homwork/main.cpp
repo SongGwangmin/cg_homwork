@@ -807,6 +807,11 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			float aspectRatio = 1200.0f / 800.0f;
 			float orthoSize = 50.0f;
 			
+			if (viewMode == 1) {
+				orthoSize = 10.0f;
+				orthoSize *= 5.0f / std::max(gridWidth, gridHeight);
+			}
+
 			projection = glm::ortho(
 				-orthoSize * aspectRatio,
 				orthoSize * aspectRatio,
@@ -841,7 +846,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		}
 
 		// Player Cube 그리기 (중심 위치로 이동)
-		if (runnerToggle == 1) {
+		if (runnerToggle == 1 && viewMode == 3) {
 			int startVertex = 36;
 
 			// 플레이어 크기 스케일
@@ -953,6 +958,8 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			float aspectRatio = 300.0f / 200.0f;
 			float orthoSize = 50.0f;
 			
+			
+
 			projection = glm::ortho(
 				-orthoSize * aspectRatio,
 				orthoSize * aspectRatio,
