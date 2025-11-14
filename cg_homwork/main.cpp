@@ -51,11 +51,14 @@ int updowntoggle = 0; // 상하 움직임 토글 (0: 정지, 1: 움직임)
 int runnerToggle = 0; // 캐릭터 표시 토글 (0: 숨김, 1: 표시)
 int mapsettoggle = 0; // 맵 설정 완료 토글 (0: 미완료, 1: 완료)
 float cameraAngleY = 0.0f; // 카메라 Y축 회전 각도
+int viewMode = 3; // 시점 모드 (1: 1인칭, 3: 3인칭)
+
 
 glm::mat4 dir = glm::mat4(1.0f);
 // 카메라 변수
 glm::vec3 cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);      // 카메라 위치
 glm::vec3 cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);      // 카메라 타겟
+glm::vec3 viewDir = glm::vec3(0.0f, 0.0f, -1.0f);           // 시선 방향 벡터
 
 
 // 가로, 세로 개수 전역 변수
@@ -184,6 +187,7 @@ void makeMaze(mazepos start) {
 			stack.pop_back();
 			continue;
 			
+
 
 		}
 		else { // 허용되지 않은 공간이 하나밖에 없다 == 이전에 온 길만 허용되지 않는 길이다.
@@ -561,12 +565,13 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	// Player 초기화
 	player.centerPos = glm::vec3(0.0f, 0.0f, 0.0f);  // 중심 위치
 	player.size = glm::vec3(1.0f);       // 크기
-	player.size *= 5.0f / std::max(gridWidth, gridHeight);
+	player.size.x *= 5.0f / std::max(gridWidth, gridHeight);
+	player.size.z *= 5.0f / std::max(gridWidth, gridHeight);
 	player.velocity = glm::vec3(0.0f, 0.0f, 0.0f);   // 속도
 	player.isOnGround = false;                        // 바닥 여부
 
 	// yrote 행렬 초기화
-	yrote = glm::mat4(1.0f);
+	yrote = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	//width = 800;
 	//height = 800;
@@ -771,10 +776,19 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		
 
 		glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(cameraAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::vec3 tcameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
-		tcameraPos.y = 0.0f;
-		glm::vec3 tcameraTarget = glm::vec3(rotationMatrix * glm::vec4(cameraTarget, 1.0f));
-		tcameraTarget.y = 0.0f;
+		glm::vec3 tcameraPos;
+		glm::vec3 tcameraTarget;
+		if (viewMode == 3) {
+			tcameraPos = glm::vec3(rotationMatrix * glm::vec4(cameraPos, 1.0f));
+			//tcameraPos.y = 0.0f;
+			tcameraTarget = glm::vec3(rotationMatrix * glm::vec4(cameraTarget, 1.0f));
+			//tcameraTarget.y = 0.0f;
+		}
+		else {
+			tcameraPos = glm::vec3(glm::vec4(player.centerPos, 1.0f));
+			//tcameraPos.y += 5.0f; // 플레이어 위쪽으로 카메라 위치 조정
+			tcameraTarget = tcameraPos + viewDir;
+		}
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 		// 투영 행렬 설정
@@ -805,7 +819,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
 		// 뷰 행렬 설정
-		glm::mat4 view = glm::lookAt(tcameraPos, cameraTarget, cameraUp);
+		glm::mat4 view = glm::lookAt(tcameraPos, tcameraTarget, cameraUp);
 		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
 
 		// 모든 블록 그리기
@@ -916,6 +930,13 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 
 		// ===== 두 번째 뷰포트: 작은 화면 (900, 600, 300, 200) =====
 		glViewport(900, 600, 300, 200);
+		
+		// 두 번째 뷰포트의 깊이 버퍼만 클리어
+		glEnable(GL_SCISSOR_TEST);
+		glScissor(900, 600, 300, 200);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_SCISSOR_TEST);
+
 		glm::vec3 upcameraPos = glm::vec3(0.0f, 150.0f, 0.0f); // 카메라 위치 변경
 		glm::vec3 upcameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
 		cameraUp = glm::vec3(0.0f, 0.0f, -1.0f); // 카메라 업 벡터 변경
@@ -1241,6 +1262,14 @@ void Keyboard(unsigned char key, int x, int y) {
 			std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
 		}
 		break;
+	case '1': // 1인칭 시점
+		viewMode = 1;
+		std::cout << "1인칭 시점으로 전환\n";
+		break;
+	case '3': // 3인칭 시점
+		viewMode = 3;
+		std::cout << "3인칭 시점으로 전환\n";
+		break;
 	default:
 		break;
 	}
@@ -1323,35 +1352,39 @@ void SpecialKeys(int key, int x, int y) // 특수 키(화살표 키) 콜백 함수
 
 	switch (key) {
 	case GLUT_KEY_UP: // 위쪽 화살표 - z축 음의 방향으로 이동, 0도 (앞)
-		player.centerPos.z -= MOVE_SPEED;
+		//player.centerPos.z -= MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		viewDir = glm::vec3(0.0f, 0.0f, -1.0f);
 		std::cout << "Player pos: (" << player.centerPos.x << ", " 
 		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 0도 (앞)\n";
+		std::cout << "yrote: 0도 (앞), viewDir: (0, 0, -1)\n";
 		break;
 
 	case GLUT_KEY_DOWN: // 아래쪽 화살표 - z축 양의 방향으로 이동, 180도 (뒤)
-		player.centerPos.z += MOVE_SPEED;
+		//player.centerPos.z += MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		viewDir = glm::vec3(0.0f, 0.0f, 1.0f);
 		std::cout << "Player pos: (" << player.centerPos.x << ", " 
 		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 180도 (뒤)\n";
+		std::cout << "yrote: 180도 (뒤), viewDir: (0, 0, 1)\n";
 		break;
 
 	case GLUT_KEY_LEFT: // 왼쪽 화살표 - x축 음의 방향으로 이동, 270도 (왼쪽)
-		player.centerPos.x -= MOVE_SPEED;
+		//player.centerPos.x -= MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		viewDir = glm::vec3(-1.0f, 0.0f, 0.0f);
 		std::cout << "Player pos: (" << player.centerPos.x << ", " 
 		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 270도 (왼쪽)\n";
+		std::cout << "yrote: 270도 (왼쪽), viewDir: (-1, 0, 0)\n";
 		break;
 
 	case GLUT_KEY_RIGHT: // 오른쪽 화살표 - x축 양의 방향으로 이동, 90도 (오른쪽)
-		player.centerPos.x += MOVE_SPEED;
+		//player.centerPos.x += MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		viewDir = glm::vec3(1.0f, 0.0f, 0.0f);
 		std::cout << "Player pos: (" << player.centerPos.x << ", " 
 		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 90도 (오른쪽)\n";
+		std::cout << "yrote: 90도 (오른쪽), viewDir: (1, 0, 0)\n";
 		break;
 	}
 
