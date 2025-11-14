@@ -51,7 +51,7 @@ int updowntoggle = 0; // 상하 움직임 토글 (0: 정지, 1: 움직임)
 int runnertoggle = 0; // 캐릭터 표시 토글 (0: 숨김, 1: 표시)
 float cameraAngleY = 0.0f; // 카메라 Y축 회전 각도
 
-glm::mat4 dir;
+glm::mat4 dir = glm::mat4(1.0f);
 // 카메라 변수
 glm::vec3 cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);      // 카메라 위치
 glm::vec3 cameraTarget = glm::vec3(0.0f, 10.0f, 0.0f);      // 카메라 타겟
@@ -145,6 +145,9 @@ void shuffleDirections() {
 	std::cout << "\n";*/
 }
 
+// 플레이어 위치 설정 함수 선언
+void setPlayerPos();
+
 // 미로 생성 함수
 void makeMaze(mazepos start) {
 	// TODO: 미로 생성 로직 구현
@@ -218,10 +221,14 @@ void makeMaze(mazepos start) {
 	std::cout << "미로 생성 소요 시간: " << duration.count() << " 마이크로초 (";
 	std::cout << duration.count() / 1000.0 << " 밀리초)" << std::endl;
 
+	// 플레이어 위치 설정
+	setPlayerPos();
+
 	// 미로 생성이 완료되면 캐릭터 표시
 	runnertoggle = 1;
 
 }
+
 
 // 플레이어 위치 설정 함수
 void setPlayerPos() {
@@ -236,7 +243,23 @@ void setPlayerPos() {
 		randomY = yDis(gen);
 	} while (map[randomY][randomX] != 0);
 	
-	// TODO: 플레이어 위치를 설정하는 코드 추가
+	// 블록 크기 계산
+	float blockWidth = worldmapsize / gridWidth;
+	float blockHeight = worldmapsize / gridHeight;
+	
+	// 플레이어 위치를 설정
+	// randomX는 centerPos.x에 대입
+	player.centerPos.x = randomX * blockWidth - worldmapsize / 2.0f + blockWidth / 2.0f;
+	
+	// 플레이어 높이는 블록 위에 배치 (y축)
+	player.centerPos.y = 5.0f;
+	
+	// randomY는 centerPos.z에 대입
+	player.centerPos.z = randomY * blockHeight - worldmapsize / 2.0f + blockHeight / 2.0f;
+	
+	std::cout << "플레이어 위치 설정: (" << player.centerPos.x << ", " 
+	          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
+	std::cout << "맵 좌표: [" << randomX << ", " << randomY << "]\n";
 }
 
 // Forward declaration
@@ -532,6 +555,15 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 		}
 	}
 
+	// Player 초기화
+	player.centerPos = glm::vec3(0.0f, 0.0f, 0.0f);  // 중심 위치
+	player.size = glm::vec3(2.0f, 4.0f, 2.0f);       // 크기
+	player.velocity = glm::vec3(0.0f, 0.0f, 0.0f);   // 속도
+	player.isOnGround = false;                        // 바닥 여부
+
+	// yrote 행렬 초기화
+	yrote = glm::mat4(1.0f);
+
 	//width = 800;
 	//height = 800;
 
@@ -548,7 +580,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	make_vertexShaders(); //--- 버텍스 세이더 만들기
 	make_fragmentShaders(); //--- 프래그먼트 세이더 만들기
 	shaderProgramID = make_shaderProgram();
-	glEnable(GL_CULL_FACE);
+	// glEnable(GL_CULL_FACE);  // 주석 처리 - drawScene에서 관리
 	// 버퍼 설정
 	setupBuffers();
 	glEnable(GL_DEPTH_TEST);
@@ -568,8 +600,23 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	// 큐브 정점 데이터를 allVertices에 추가
 	whiteCube->sendVertexData(allVertices);
+	
+
 
 	// 플레이어 육면체 등록
+	Cube playerCube(
+		glm::vec3(-4.0f, -4.0f, -4.0f), // v0: 앞면 왼쪽 아래
+		glm::vec3(4.0f, -4.0f, -4.0f),  // v1: 앞면 오른쪽 아래
+		glm::vec3(4.0f, -4.0f, 4.0f),   // v2: 앞면 오른쪽 위
+		glm::vec3(-4.0f, -4.0f, 4.0f),  // v3: 앞면 왼쪽 위
+		glm::vec3(-4.0f, 4.0f, -4.0f),  // v4: 뒷면 왼쪽 아래
+		glm::vec3(4.0f, 4.0f, -4.0f),   // v5: 뒷면 오른쪽 아래
+		glm::vec3(4.0f, 4.0f, 4.0f),    // v6: 뒷면 오른쪽 위
+		glm::vec3(-4.0f, 4.0f, 4.0f),   // v7: 뒷면 왼쪽 위
+		glm::vec3(1.0f, 1.0f, 0.0f)     // 노란색
+	);
+	playerCube.sendVertexData(allVertices);
+	
 	Cube playerbodyCube(
 		glm::vec3(-4.0f, -4.0f, -4.0f), // v0: 앞면 왼쪽 아래
 		glm::vec3(4.0f, -4.0f, -4.0f),  // v1: 앞면 오른쪽 아래
@@ -685,6 +732,13 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 	glClearColor(rColor, gColor, bColor, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// 깊이 테스트 확인 (이미 활성화되어 있어야 함)
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS); // 더 가까운 것이 앞에 그려짐
+	
+	// 백페이스 컬링 비활성화 - 블록 안쪽도 보이도록
+	glDisable(GL_CULL_FACE);
+
 	// 카메라 설정
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -761,12 +815,104 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 				glUniform3fv(colorLocation, 1, glm::value_ptr(block.color));
 				
 				if (map[z][x]) {
-					glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
 				}
 			}
 		}
 
+		// Player Cube 그리기 (중심 위치로 이동)
+		if (runnertoggle == 1) {
+			int startVertex = 36;
 
+			model = glm::mat4(1.0f);
+
+			glm::mat4 headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.30f, 0.3f, 0.3f));
+			glm::mat4 headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.8f, 0.0f));
+
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
+			//model = yrote * model
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			startVertex += 36;
+
+			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.50f, 0.5f, 0.5f));
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			startVertex += 36;
+
+
+
+			//다리
+			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 1.38f));
+
+			glm::mat4 stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.38f));
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			//팔
+			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 2.5f));
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, -2.5f));
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			//zh
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+		}
+		////
 
 		
 
@@ -816,10 +962,104 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 				glUniform3fv(colorLocation, 1, glm::value_ptr(block.color));
 				
 				if (map[z][x]) {
-					glDrawArrays(GL_TRIANGLES, 0, allVertices.size() / 6);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
 				}
 			}
 		}
+
+		// Player Cube 그리기 (중심 위치로 이동)
+		if (runnertoggle == 1) {
+			int startVertex = 36;
+			
+			model = glm::mat4(1.0f);
+
+			glm::mat4 headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.30f, 0.3f, 0.3f));
+			glm::mat4 headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.8f, 0.0f));
+
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
+			//model = yrote * model
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			startVertex += 36;
+
+			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.50f, 0.5f, 0.5f));
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			startVertex += 36;
+
+
+
+			//다리
+			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 1.38f));
+
+			glm::mat4 stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.38f));
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			//팔
+			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 2.5f));
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, -2.5f));
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+
+			//zh
+			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+
+			stickmodel = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//model = yrote * model;  // Y축 회전 적용
+			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, startVertex, 36);
+		}
+		////
 
 		glBindVertexArray(0);
 	}
@@ -1085,18 +1325,26 @@ void SpecialKeys(int key, int x, int y) // 특수 키(화살표 키) 콜백 함수
 	switch (key) {
 	case GLUT_KEY_UP: // 위쪽 화살표 - z축 음의 방향으로 이동
 		player.centerPos.z -= MOVE_SPEED;
+		std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
 		break;
 
 	case GLUT_KEY_DOWN: // 아래쪽 화살표 - z축 양의 방향으로 이동
 		player.centerPos.z += MOVE_SPEED;
+		std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
 		break;
 
 	case GLUT_KEY_LEFT: // 왼쪽 화살표 - x축 음의 방향으로 이동
 		player.centerPos.x -= MOVE_SPEED;
+		std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
 		break;
 
 	case GLUT_KEY_RIGHT: // 오른쪽 화살표 - x축 양의 방향으로 이동
 		player.centerPos.x += MOVE_SPEED;
+		std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
 		break;
 	}
 
