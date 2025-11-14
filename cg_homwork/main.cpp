@@ -1076,6 +1076,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 		}
+
 		////
 
 		glBindVertexArray(0);
@@ -1345,6 +1346,41 @@ void TimerFunction(int value)
 					block.velocity = 1; // 방향 반전
 				}
 			}
+		}
+	}
+
+	// Player 이동 처리 (runnerToggle이 켜져있을 때만)
+	if (runnerToggle == 1) {
+		// 임시 위치 계산
+		glm::vec3 tempPos = player.centerPos + viewDir / 2.0f;
+		
+		// 임시 플레이어 객체 생성
+		Player tempPlayer = player;
+		tempPlayer.centerPos = tempPos;
+		AABB tempAABB = tempPlayer.getAABB();
+		
+		// 충돌 검사
+		bool collision = false;
+		
+		// 모든 맵 블록과 충돌 체크
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				if (map[z][x] == 1) { // 벽인 경우만 충돌 체크
+					const BlockData& block = getBlockConst(x, z);
+					
+					// X, Z축 충돌 체크
+					if (checkAABBCollisionXZ(tempAABB, block.boundingBox)) {
+						collision = true;
+						break;
+					}
+				}
+			}
+			if (collision) break;
+		}
+		
+		// 충돌이 없으면 이동 적용
+		if (!collision) {
+			player.centerPos = tempPos;
 		}
 	}
 
