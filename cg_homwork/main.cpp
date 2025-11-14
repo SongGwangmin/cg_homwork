@@ -96,13 +96,13 @@ struct Player {
 	glm::vec3 centerPos;     // 중심 좌표
 	glm::vec3 size;          // 크기 (폭, 높이, 깊이)
 	glm::vec3 velocity;      // 속도 (물리 시스템용)
-	bool isOnGround;         // 바닥에 있는지 여부
+	bool isOnGround;         // 바닥에 있는지 유무
 
 	// AABB 계산 함수
 	AABB getAABB() const {
 		AABB box;
-		box.min = centerPos - size / 2.0f;  // 중심에서 반 크기만큼 뺌
-		box.max = centerPos + size / 2.0f;  // 중심에서 반 크기만큼 더함
+		box.min = centerPos - size / 2.0f;  // 중심에서 반 크기만큼 빼기
+		box.max = centerPos + size / 2.0f;  // 중심에서 반 크기만큼 더하기
 		return box;
 	}
 };
@@ -228,7 +228,6 @@ void makeMaze(mazepos start) {
 	runnertoggle = 1;
 
 }
-
 
 // 플레이어 위치 설정 함수
 void setPlayerPos() {
@@ -557,7 +556,8 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	// Player 초기화
 	player.centerPos = glm::vec3(0.0f, 0.0f, 0.0f);  // 중심 위치
-	player.size = glm::vec3(2.0f, 4.0f, 2.0f);       // 크기
+	player.size = glm::vec3(1.0f);       // 크기
+	player.size *= 5.0f / std::max(gridWidth, gridHeight);
 	player.velocity = glm::vec3(0.0f, 0.0f, 0.0f);   // 속도
 	player.isOnGround = false;                        // 바닥 여부
 
@@ -824,91 +824,82 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 		if (runnertoggle == 1) {
 			int startVertex = 36;
 
-			model = glm::mat4(1.0f);
+			// 플레이어 크기 스케일
+			glm::mat4 playerSizeScale = glm::scale(glm::mat4(1.0f), player.size);
 
+			// 머리
+			model = glm::mat4(1.0f);
 			glm::mat4 headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.30f, 0.3f, 0.3f));
 			glm::mat4 headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.8f, 0.0f));
 
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
-			//model = yrote * model
+			model = yrote * model * playerSizeScale * headmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
 			startVertex += 36;
 
+			// 몸통
 			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.50f, 0.5f, 0.5f));
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
+			model = yrote * model * playerSizeScale * headmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
 			startVertex += 36;
 
-
-
-			//다리
+			// 다리 1
 			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 1.38f));
-
 			glm::mat4 stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
+			// 다리 2
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.38f));
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
-			//팔
+			// 팔 1
 			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 2.5f));
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
+			// 팔 2
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, -2.5f));
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
-			//zh
+			// 지팡이
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 		}
@@ -967,95 +958,86 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			}
 		}
 
-		// Player Cube 그리기 (중심 위치로 이동)
+		// Player Cube 그리기 (중심 위치로 이동) - 두 번째 뷰포트
 		if (runnertoggle == 1) {
 			int startVertex = 36;
 			
-			model = glm::mat4(1.0f);
+			// 플레이어 크기 스케일
+			glm::mat4 playerSizeScale = glm::scale(glm::mat4(1.0f), player.size);
 
+			// 머리
+			model = glm::mat4(1.0f);
 			glm::mat4 headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.30f, 0.3f, 0.3f));
 			glm::mat4 headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.8f, 0.0f));
 
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
-			//model = yrote * model
+			model = yrote * model * playerSizeScale * headmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
 			startVertex += 36;
 
+			// 몸통
 			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.50f, 0.5f, 0.5f));
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * headmodel * headscale;  // Y축 회전 적용
+			model = yrote * model * playerSizeScale * headmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
 			startVertex += 36;
 
-
-
-			//다리
+			// 다리 1
 			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 1.38f));
-
 			glm::mat4 stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
+			// 다리 2
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.38f));
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
-			//팔
+			// 팔 1
 			headscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 1.0f, 0.15f));
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 2.5f));
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), -armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
+			// 팔 2
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, -2.5f));
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), armangle, glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 
-			//zh
+			// 지팡이
 			headmodel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
-
 			stickmodel = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//model = yrote * model;  // Y축 회전 적용
-			model = yrote * model * dir * headmodel * stickmodel * headscale;  // Y축 회전 적용
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, player.centerPos);  // Player 중심 위치로 이동
+			model = yrote * model * dir * playerSizeScale * headmodel * stickmodel * headscale;  // Y축 회전 적용 후 크기 조정
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, startVertex, 36);
 		}
