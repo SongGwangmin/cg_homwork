@@ -273,9 +273,9 @@ void setPlayerPos() {
 void Setshortestpath() {
 	std::vector<std::vector<int>> edgemap;
 
-	edgemap.resize(gridHeight);
-	for (int i = 0; i < gridHeight; ++i) {
-		edgemap[i].resize(gridWidth, unrealizedweight); // 각 행을 gridWidth 크기로 초기화하고 1로 채움
+	edgemap.resize(gridHeight * gridWidth);
+	for (int i = 0; i < gridHeight * gridWidth; ++i) {
+		edgemap[i].resize(gridHeight * gridWidth, unrealizedweight); // 각 행을 gridWidth 크기로 초기화하고 1로 채움
 	}
 }
 
