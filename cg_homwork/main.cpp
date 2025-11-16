@@ -17,6 +17,7 @@
 
 #define pi 3.14159265358979323846
 #define worldmapsize 50.0f
+#define unrealizedweight 901
 
 
 std::random_device rd;
@@ -267,6 +268,15 @@ void setPlayerPos() {
 	std::cout << "플레이어 위치 설정: (" << player.centerPos.x << ", " 
 	          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
 	std::cout << "맵 좌표: [" << randomX << ", " << randomY << "]\n";
+}
+
+void Setshortestpath() {
+	std::vector<std::vector<int>> edgemap;
+
+	edgemap.resize(gridHeight);
+	for (int i = 0; i < gridHeight; ++i) {
+		edgemap[i].resize(gridWidth, unrealizedweight); // 각 행을 gridWidth 크기로 초기화하고 1로 채움
+	}
 }
 
 // Forward declaration
