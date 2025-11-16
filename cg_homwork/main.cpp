@@ -331,6 +331,9 @@ void Setshortestpath() {
 	int nowIndex = getBlockIndex(start.x, start.y);
 	distances[nowIndex] = 0;
 
+	std::vector<int> previous;
+	previous.resize(listsize, -1);
+
 	while (!stack.empty()) {
 		mazepos current = stack.back();
 		stack.pop_back();
@@ -343,6 +346,7 @@ void Setshortestpath() {
 				if (edgemap[currentIndex][neighborIndex] != unrealizedweight) {
 					int newDist = distances[currentIndex] + edgemap[currentIndex][neighborIndex];
 					if (newDist < distances[neighborIndex]) {
+						previous[neighborIndex] = currentIndex;
 						distances[neighborIndex] = newDist;
 						mazepos next = { nx, nz };
 						stack.push_back(next);
