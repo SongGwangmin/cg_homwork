@@ -139,6 +139,10 @@ struct mazepos {
 // 방향 벡터 (상, 좌, 우, 하)
 std::vector<mazepos> directions = {{0, -1}, {-1, 0}, {1, 0}, {0, 1}};
 
+// 시작지점을 저장할 함수
+int MazeStartX = -1;
+int MazeStartY = -1;
+
 // 방향 벡터를 섞는 함수
 void shuffleDirections() {
 	std::shuffle(directions.begin(), directions.end(), gen);
@@ -302,7 +306,7 @@ void Setshortestpath() {
 			}
 		}
 	}
-
+	int maxcnt = 0;
 	// 출력
 	for (int i = 0; i < listsize; ++i) {
 		for (int j = 0; j < listsize; ++j) {
@@ -311,9 +315,59 @@ void Setshortestpath() {
 			}
 			else {
 				std::cout << edgemap[i][j] << " ";
+				++maxcnt;
 			}
 		}
 		std::cout << std::endl;
+	}
+
+	// 다익스트라
+	std::vector<mazepos> stack;
+	stack.clear();
+	mazepos start = { MazeStartX, MazeStartY };
+	stack.push_back(start);
+	std::vector<int> distances;
+	distances.resize(listsize, unrealizedweight);
+
+	int nowIndex = getBlockIndex(start.x, start.y);
+	distances[nowIndex] = 0;
+
+	int cnt = 0;
+
+	while (!stack.empty() || cnt < maxcnt) {
+		mazepos current = stack.back();
+		stack.pop_back();
+		int currentIndex = getBlockIndex(current.x, current.y);
+		for (const auto& dir : directions) {
+			int nx = current.x + dir.x;
+			int nz = current.y + dir.y;
+			int neighborIndex = getBlockIndex(nx, nz);
+			if (neighborIndex != -1) {
+				if (edgemap[currentIndex][neighborIndex] != unrealizedweight) {
+					int newDist = distances[currentIndex] + edgemap[currentIndex][neighborIndex];
+					if (newDist < distances[neighborIndex]) {
+						distances[neighborIndex] = newDist;
+						mazepos next = { nx, nz };
+						stack.push_back(next);
+					}
+				}
+				
+			}
+		}
+	}
+
+	std::cout << "최단 거리 결과:\n";
+
+	for (int i = 0; i < listsize; ++i) {
+		if (distances[i] == unrealizedweight) {
+			std::cout << "∞ ";
+		}
+		else {
+			std::cout << distances[i] << " ";
+		}
+		if ((i + 1) % gridWidth == 0) {
+			std::cout << std::endl;
+		}
 	}
 }
 
@@ -1315,6 +1369,9 @@ void Keyboard(unsigned char key, int x, int y) {
 		}
 		break;
 		}
+
+		MazeStartX = startpos.x;
+		MazeStartY = startpos.y;
 
 		// 미로 생성 함수 호출
 		makeMaze(startpos);
