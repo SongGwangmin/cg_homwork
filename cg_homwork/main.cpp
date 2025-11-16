@@ -272,10 +272,46 @@ void setPlayerPos() {
 
 void Setshortestpath() {
 	std::vector<std::vector<int>> edgemap;
+	int listsize = gridHeight * gridWidth;
+	edgemap.resize(listsize);
+	for (int i = 0; i < listsize; ++i) {
+		edgemap[i].resize(listsize, unrealizedweight); // 각 행을 gridWidth 크기로 초기화하고 1로 채움
+	}
 
-	edgemap.resize(gridHeight * gridWidth);
-	for (int i = 0; i < gridHeight * gridWidth; ++i) {
-		edgemap[i].resize(gridHeight * gridWidth, unrealizedweight); // 각 행을 gridWidth 크기로 초기화하고 1로 채움
+	// edgemap 설정
+	// 각 노드를 순회한다. map이 0인 곳에서 상하좌우로 연결된 노드를 찾는다.
+	// 연결된 노드 getBlockIndex 해서 -1일 경우 무시
+	// 유효한 노드일 때 map 참조해서 0일 경우에만 간선 연결
+	for (int z = 0; z < gridHeight; ++z) {
+		for (int x = 0; x < gridWidth; ++x) {
+			if (map[z][x] == 0) { // 길인 경우에만 간선 연결
+				for (const auto& dir : directions) {
+					int nx = x + dir.x;
+					int nz = z + dir.y;
+					// 범위 내에 있고, 길인지 확인
+					if (getBlockIndex(nx, nz) != -1) {
+						if (map[nz][nx] == 0) {
+							int fromIndex = getBlockIndex(x, z);
+							int toIndex = getBlockIndex(nx, nz);
+							edgemap[fromIndex][toIndex] = 1; // 간선 연결
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 출력
+	for (int i = 0; i < listsize; ++i) {
+		for (int j = 0; j < listsize; ++j) {
+			if (edgemap[i][j] == unrealizedweight) {
+				std::cout << "∞ ";
+			}
+			else {
+				std::cout << edgemap[i][j] << " ";
+			}
+		}
+		std::cout << std::endl;
 	}
 }
 
@@ -1292,6 +1328,11 @@ void Keyboard(unsigned char key, int x, int y) {
 			std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
 		}
 		break;
+	case 'd':
+	case 'D':
+	{
+
+	}
 	case '1': // 1인칭 시점
 		viewMode = 1;
 		std::cout << "1인칭 시점으로 전환\n";
