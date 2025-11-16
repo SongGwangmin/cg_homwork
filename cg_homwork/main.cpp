@@ -306,20 +306,19 @@ void Setshortestpath() {
 			}
 		}
 	}
-	int maxcnt = 0;
+
 	// 출력
-	for (int i = 0; i < listsize; ++i) {
+	/*for (int i = 0; i < listsize; ++i) {
 		for (int j = 0; j < listsize; ++j) {
 			if (edgemap[i][j] == unrealizedweight) {
 				std::cout << "∞ ";
 			}
 			else {
 				std::cout << edgemap[i][j] << " ";
-				++maxcnt;
 			}
 		}
 		std::cout << std::endl;
-	}
+	}*/
 
 	// 다익스트라
 	std::vector<mazepos> stack;
@@ -332,9 +331,7 @@ void Setshortestpath() {
 	int nowIndex = getBlockIndex(start.x, start.y);
 	distances[nowIndex] = 0;
 
-	int cnt = 0;
-
-	while (!stack.empty() || cnt < maxcnt) {
+	while (!stack.empty()) {
 		mazepos current = stack.back();
 		stack.pop_back();
 		int currentIndex = getBlockIndex(current.x, current.y);
@@ -351,12 +348,9 @@ void Setshortestpath() {
 						stack.push_back(next);
 					}
 				}
-				
 			}
 		}
 	}
-
-	std::cout << "최단 거리 결과:\n";
 
 	for (int i = 0; i < listsize; ++i) {
 		if (distances[i] == unrealizedweight) {
