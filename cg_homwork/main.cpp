@@ -270,6 +270,8 @@ void setPlayerPos() {
 	std::cout << "맵 좌표: [" << randomX << ", " << randomY << "]\n";
 }
 
+inline int getBlockIndex(int x, int z);
+
 void Setshortestpath() {
 	std::vector<std::vector<int>> edgemap;
 	int listsize = gridHeight * gridWidth;
@@ -1177,7 +1179,7 @@ void Keyboard(unsigned char key, int x, int y) {
 			for (int x = 0; x < gridWidth; ++x) {
 				BlockData& block = getBlock(x, z);
 				block.deltaHeight -= 0.1f;
-				
+
 				// 음수가 되면 0.0f로 설정
 				if (block.deltaHeight < 0.0f) {
 					block.deltaHeight = 0.0f;
@@ -1197,17 +1199,17 @@ void Keyboard(unsigned char key, int x, int y) {
 		std::cout << "모든 블록의 nowheight를 0.1f로 리셋\n";
 		break;
 	case 'y': // Y축 양의 방향으로 5도 회전
-		{
+	{
 		cameraAngleY += 5.0f;
 		std::cout << "카메라 Y축 +5도 회전\n";
-		}
-		break;
+	}
+	break;
 	case 'Y': // Y축 음의 방향으로 5도 회전
-		{
+	{
 		cameraAngleY -= 5.0f;
 		std::cout << "카메라 Y축 -5도 회전\n";
-		}
-		break;
+	}
+	break;
 	case 'z':
 	{
 		cameraPos.z += 5.0f;
@@ -1215,44 +1217,44 @@ void Keyboard(unsigned char key, int x, int y) {
 	}
 	break;
 	case 'Z':
-		{
+	{
 		cameraPos.z -= 5.0f;
 		//cameraTarget.z -= 5.0f;
 	}
-		break;
+	break;
 	case 'c': // 초기화
 	case 'C':
-		{
-			// 카메라 초기화
-			cameraAngleY = 0.0f;
-			cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);
-			
-			// 모든 블록의 nowheight를 longness로 설정
-			for (int z = 0; z < gridHeight; ++z) {
-				for (int x = 0; x < gridWidth; ++x) {
-					BlockData& block = getBlock(x, z);
-					block.nowheight = block.longness;
-					map[z][x] = 1;
+	{
+		// 카메라 초기화
+		cameraAngleY = 0.0f;
+		cameraPos = glm::vec3(0.0f, 100.0f, 100.0f);
 
-				}
+		// 모든 블록의 nowheight를 longness로 설정
+		for (int z = 0; z < gridHeight; ++z) {
+			for (int x = 0; x < gridWidth; ++x) {
+				BlockData& block = getBlock(x, z);
+				block.nowheight = block.longness;
+				map[z][x] = 1;
+
 			}
-			
-			// updowntoggle 끄기
-			updowntoggle = 0;
-			
-			// 토글들 끄기
-			mapsettoggle = 0;
-			runnerToggle = 0;
-			projectionToggle = 1;
-			viewMode = 3;
-
-
-			std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
-
-
-
 		}
-		break;
+
+		// updowntoggle 끄기
+		updowntoggle = 0;
+
+		// 토글들 끄기
+		mapsettoggle = 0;
+		runnerToggle = 0;
+		projectionToggle = 1;
+		viewMode = 3;
+
+
+		std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
+
+
+
+	}
+	break;
 	case 'g': // 방향 벡터 섞기
 	case 'G':
 		shuffleDirections();
@@ -1264,60 +1266,60 @@ void Keyboard(unsigned char key, int x, int y) {
 
 		// map을 gridWidth * gridHeight 크기의 2차원 배열로 초기화
 		for (int i = 0; i < gridHeight; ++i) {
-			for(int j = 0; j < gridWidth; ++j) {
+			for (int j = 0; j < gridWidth; ++j) {
 				map[i][j] = 1;
 			}
 		}
-		
+
 		mazepos startpos;
 		// 첫 구멍파기
 		switch (selection) {
 		case 0: // 위
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridWidth - 2);
-			
+
 			startpos.x = firstdis(gen);
 			startpos.y = 0;
 
 			map[startpos.y][startpos.x] = 0;
 		}
-			break;
+		break;
 		case 1: // 아래
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridWidth - 2);
-			
+
 			startpos.x = firstdis(gen);
 			startpos.y = gridHeight - 1;
 
 			map[startpos.y][startpos.x] = 0;
 		}
-			break;
+		break;
 		case 2:// 왼쪽
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridHeight - 2);
-			
+
 			startpos.x = 0;
 			startpos.y = firstdis(gen);
 
 			map[startpos.y][startpos.x] = 0;
 		}
-			break;
+		break;
 		case 3: // 오른쪽
 		{
 			std::uniform_int_distribution<int> firstdis(1, gridHeight - 2);
-			
+
 			startpos.x = gridWidth - 1;
 			startpos.y = firstdis(gen);
 
 			map[startpos.y][startpos.x] = 0;
 		}
-			break;
+		break;
 		}
-		
+
 		// 미로 생성 함수 호출
 		makeMaze(startpos);
 	}
-		break;
+	break;
 	case 's': // 플레이어 위치 설정
 	case 'S':
 		if (mapsettoggle == 1) {
@@ -1329,10 +1331,17 @@ void Keyboard(unsigned char key, int x, int y) {
 		}
 		break;
 	case 'd':
-	case 'D':
+	case 'D': // dijkstra 알고리즘으로 최단 경로 찾기
 	{
-
+		if (mapsettoggle == 1) {
+			Setshortestpath();
+			std::cout << "Dijkstra 알고리즘으로 최단 경로 탐색 완료!\n";
+		}
+		else {
+			std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
+		}
 	}
+		break;
 	case '1': // 1인칭 시점
 		viewMode = 1;
 		std::cout << "1인칭 시점으로 전환\n";
