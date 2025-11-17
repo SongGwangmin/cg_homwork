@@ -276,6 +276,18 @@ void setPlayerPos() {
 
 inline int getBlockIndex(int x, int z);
 
+void makeshortestmaze(std::vector<int>& previous, int& playerIndex) { // 플레이어 위치에서 시작점까지 최단 경로로 미로 만들기
+	std::cout << playerIndex << " ";
+	if( playerIndex == previous[playerIndex] ) {
+		return;
+	}
+	else {
+		makeshortestmaze(previous, previous[playerIndex]);
+	}
+
+
+}
+
 void Setshortestpath() {
 	std::vector<std::vector<int>> edgemap;
 	int listsize = gridHeight * gridWidth;
@@ -332,7 +344,11 @@ void Setshortestpath() {
 	distances[nowIndex] = 0;
 
 	std::vector<int> previous;
-	previous.resize(listsize, -1);
+	previous.resize(listsize);
+
+	for (int i = 0; i < listsize; ++i) {
+		previous[i] = i; // 자기 자신으로 초기화
+	}
 
 	while (!stack.empty()) {
 		mazepos current = stack.back();
@@ -367,6 +383,19 @@ void Setshortestpath() {
 			std::cout << std::endl;
 		}
 	}
+
+	if (runnerToggle == 1) {
+		int playerIndex = getBlockIndex(
+			static_cast<int>((player.centerPos.x + worldmapsize / 2.0f) / (worldmapsize / gridWidth)),
+			static_cast<int>((player.centerPos.z + worldmapsize / 2.0f) / (worldmapsize / gridHeight))
+		);
+		std::cout << "플레이어의 맵 인덱스: " << playerIndex << std::endl;
+		std::cout << "플레이어까지의 최단 거리: " << distances[playerIndex] << std::endl;
+
+		makeshortestmaze(previous, playerIndex);
+	}
+
+	
 }
 
 // Forward declaration
