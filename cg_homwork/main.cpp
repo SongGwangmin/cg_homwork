@@ -276,16 +276,69 @@ void setPlayerPos() {
 
 inline int getBlockIndex(int x, int z);
 
+inline const BlockData& getBlockConst(int x, int z);
+
+void pushPlayerOutOfWalls() {
+	AABB playerAABB = player.getAABB();
+
+	for (int z = 0; z < gridHeight; ++z) {
+		for (int x = 0; x < gridWidth; ++x) {
+			if (map[z][x] == 1) {
+				const BlockData& block = getBlockConst(x, z);
+
+				if (checkAABBCollisionXZ(playerAABB, block.boundingBox)) {
+					// 충돌 시 가장 짧은 거리로 밀어냄
+					float overlapLeft = playerAABB.max.x - block.boundingBox.min.x;
+					float overlapRight = block.boundingBox.max.x - playerAABB.min.x;
+					float overlapFront = playerAABB.max.z - block.boundingBox.min.z;
+					float overlapBack = block.boundingBox.max.z - playerAABB.min.z;
+
+					float minOverlap = std::min({ overlapLeft, overlapRight, overlapFront, overlapBack });
+
+					if (minOverlap == overlapLeft) {
+						player.centerPos.x -= overlapLeft;
+					}
+					else if (minOverlap == overlapRight) {
+						player.centerPos.x += overlapRight;
+					}
+					else if (minOverlap == overlapFront) {
+						player.centerPos.z -= overlapFront;
+					}
+					else {
+						player.centerPos.z += overlapBack;
+					}
+
+					// 업데이트된 AABB로 다시 확인
+					playerAABB = player.getAABB();
+				}
+			}
+		}
+	}
+
+	std::cout << "플레이어 위치 보정: (" << player.centerPos.x << ", "
+		<< player.centerPos.y << ", " << player.centerPos.z << ")\n";
+}
+
 void makeshortestmaze(std::vector<int>& previous, int& playerIndex) { // 플레이어 위치에서 시작점까지 최단 경로로 미로 만들기
+	
+	// map 초기화
+	for (int z = 0; z < gridHeight; ++z) {
+		for (int x = 0; x < gridWidth; ++x) {
+			map[z][x] = 1; // 벽으로 초기화
+		}
+	}
+
+
+	
 	std::cout << playerIndex << " ";
 	if( playerIndex == previous[playerIndex] ) {
-		return;
+		
 	}
 	else {
 		makeshortestmaze(previous, previous[playerIndex]);
 	}
 
-
+	map[playerIndex / gridWidth][playerIndex % gridWidth] = 0; // 길로 설정
 }
 
 void Setshortestpath() {
@@ -393,6 +446,8 @@ void Setshortestpath() {
 		std::cout << "플레이어까지의 최단 거리: " << distances[playerIndex] << std::endl;
 
 		makeshortestmaze(previous, playerIndex);
+
+		pushPlayerOutOfWalls();
 	}
 
 	
