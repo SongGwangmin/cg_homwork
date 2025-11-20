@@ -315,8 +315,6 @@ void pushPlayerOutOfWalls() {
 		}
 	}
 
-	std::cout << "플레이어 위치 보정: (" << player.centerPos.x << ", "
-		<< player.centerPos.y << ", " << player.centerPos.z << ")\n";
 }
 
 void makeshortestmaze(std::vector<int>& previous, int& playerIndex) { // 플레이어 위치에서 시작점까지 최단 경로로 미로 만들기
