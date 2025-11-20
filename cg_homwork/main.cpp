@@ -227,15 +227,15 @@ void makeMaze(mazepos start) {
 	auto endTime = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
 
-	std::cout << "미로 생성 소요 시간: " << duration.count() << " 마이크로초 (";
-	std::cout << duration.count() / 1000.0 << " 밀리초)" << std::endl;
+	//std::cout << "미로 생성 소요 시간: " << duration.count() << " 마이크로초 (";
+	//std::cout << duration.count() / 1000.0 << " 밀리초)" << std::endl;
 
 	// 플레이어 토글 끄기
 	runnerToggle = 0;
 	
 	// 미로 생성이 완료되면 맵 설정 완료
 	mapsettoggle = 1;
-	std::cout << "미로 생성 완료! 's' 키를 눌러 플레이어를 배치하세요.\n";
+	//std::cout << "미로 생성 완료! 's' 키를 눌러 플레이어를 배치하세요.\n";
 
 }
 
@@ -269,9 +269,9 @@ void setPlayerPos() {
 	// 플레이어 표시 활성화
 	runnerToggle = 1;
 	
-	std::cout << "플레이어 위치 설정: (" << player.centerPos.x << ", " 
-	          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-	std::cout << "맵 좌표: [" << randomX << ", " << randomY << "]\n";
+	//std::cout << "플레이어 위치 설정: (" << player.centerPos.x << ", " 
+	//          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
+	//std::cout << "맵 좌표: [" << randomX << ", " << randomY << "]\n";
 }
 
 inline int getBlockIndex(int x, int z);
@@ -326,7 +326,7 @@ void makeshortestmaze(std::vector<int>& previous, int& playerIndex) { // 플레이�
 		}
 	}
 
-
+	
 	
 	//std::cout << playerIndex << " ";
 	if( playerIndex == previous[playerIndex] ) {
@@ -374,13 +374,13 @@ void Setshortestpath() {
 	/*for (int i = 0; i < listsize; ++i) {
 		for (int j = 0; j < listsize; ++j) {
 			if (edgemap[i][j] == unrealizedweight) {
-				std::cout << "∞ ";
+				// std::cout << "∞ ";
 			}
 			else {
-				std::cout << edgemap[i][j] << " ";
+				// std::cout << edgemap[i][j] << " ";
 			}
 		}
-		std::cout << std::endl;
+		// std::cout << std::endl;
 	}*/
 
 	// 다익스트라
@@ -425,13 +425,13 @@ void Setshortestpath() {
 
 	for (int i = 0; i < listsize; ++i) {
 		if (distances[i] == unrealizedweight) {
-			std::cout << "∞ ";
+			// std::cout << "∞ ";
 		}
 		else {
-			std::cout << distances[i] << " ";
+			// std::cout << distances[i] << " ";
 		}
 		if ((i + 1) % gridWidth == 0) {
-			std::cout << std::endl;
+			// std::cout << std::endl;
 		}
 	}
 
@@ -621,10 +621,10 @@ void setupBuffers() {
 
 
 
-// BlockData 2D 배열을 1D 벡터로 저장
+/// BlockData 2D 배열을 1D 벡터로 저장
 std::vector<BlockData> blockGrid;
 
-// 2D 인덱스를 1D 인덱스로 변환하는 함수
+/// 2D 인덱스를 1D 인덱스로 변환하는 함수
 inline int getBlockIndex(int x, int z) {
 	if (x < 0 || x >= gridWidth || z < 0 || z >= gridHeight) {
 		return -1; // 유효하지 않은 인덱스
@@ -632,21 +632,21 @@ inline int getBlockIndex(int x, int z) {
 	return z * gridWidth + x;
 }
 
-// 특정 위치의 BlockData 가져오기 (참조 반환으로 직접 수정 가능)
+/// 특정 위치의 BlockData 가져오기 (참조 반환으로 직접 수정 가능)
 inline BlockData& getBlock(int x, int z) {
 	return blockGrid[getBlockIndex(x, z)];
 }
 
-// 특정 위치의 BlockData 가져오기 (const 버전)
+/// 특정 위치의 BlockData 가져오기 (const 버전)
 inline const BlockData& getBlockConst(int x, int z) {
 	return blockGrid[getBlockIndex(x, z)];
 }
 
 
 
-// 숫자 입력 받기 함수
+/// 숫자 입력 받기 함수
 bool getValidInput(const char* prompt, int& value) {
-	std::cout << prompt;
+	//std::cout << prompt;
 	
 	if (!(std::cin >> value)) {
 		// 입력이 숫자가 아닌 경우
@@ -663,7 +663,7 @@ bool getValidInput(const char* prompt, int& value) {
 	return true;
 }
 
-// 가로, 세로 개수 입력받기
+/// 가로, 세로 개수 입력받기
 void getGridDimensions() {
 	std::cout << "=================================\n";
 	std::cout << "그리드 크기를 입력하세요 (5~25)\n";
@@ -1475,7 +1475,7 @@ void Keyboard(unsigned char key, int x, int y) {
 			//std::cout << "Dijkstra 알고리즘으로 최단 경로 탐색 완료!\n";
 		}
 		else {
-			std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
+			//std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
 		}
 	}
 		break;
@@ -1550,7 +1550,7 @@ void TimerFunction(int value)
 				}
 				
 				// 하한선 체크: 0.0f 밑으로 가면
-				if (block.nowheight < 0.0f) {
+							if (block.nowheight < 0.0f) {
 					block.nowheight = 0.0f;
 					block.velocity = 1; // 방향 반전
 				}
@@ -1607,36 +1607,36 @@ void SpecialKeys(int key, int x, int y) // 특수 키(화살표 키) 콜백 함수
 		//player.centerPos.z -= MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		viewDir = glm::vec3(0.0f, 0.0f, -1.0f);
-		std::cout << "Player pos: (" << player.centerPos.x << ", " 
-		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 0도 (앞), viewDir: (0, 0, -1)\n";
+		//std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		//          << player.centerPos.y << ", " << player.centerPos.z << ")\\n";
+		//std::cout << "yrote: 0도 (앞), viewDir: (0, 0, -1)\\n";
 		break;
 
 	case GLUT_KEY_DOWN: // 아래쪽 화살표 - z축 양의 방향으로 이동, 180도 (뒤)
 		//player.centerPos.z += MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		viewDir = glm::vec3(0.0f, 0.0f, 1.0f);
-		std::cout << "Player pos: (" << player.centerPos.x << ", " 
-		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 180도 (뒤), viewDir: (0, 0, 1)\n";
+		//std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		//          << playerCenterPos.y << ", " << player.centerPos.z << ")\\n";
+		//std::cout << "yrote: 180도 (뒤), viewDir: (0, 0, 1)\\n";
 		break;
 
 	case GLUT_KEY_LEFT: // 왼쪽 화살표 - x축 음의 방향으로 이동, 270도 (왼쪽)
 		//player.centerPos.x -= MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		viewDir = glm::vec3(-1.0f, 0.0f, 0.0f);
-		std::cout << "Player pos: (" << player.centerPos.x << ", " 
-		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 270도 (왼쪽), viewDir: (-1, 0, 0)\n";
+		//std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		//          << player.centerPos.y << ", " << player.centerPos.z << ")\\n";
+		//std::cout << "yrote: 270도 (왼쪽), viewDir: (-1, 0, 0)\\n";
 		break;
 
 	case GLUT_KEY_RIGHT: // 오른쪽 화살표 - x축 양의 방향으로 이동, 90도 (오른쪽)
 		//player.centerPos.x += MOVE_SPEED;
 		yrote = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		viewDir = glm::vec3(1.0f, 0.0f, 0.0f);
-		std::cout << "Player pos: (" << player.centerPos.x << ", " 
-		          << player.centerPos.y << ", " << player.centerPos.z << ")\n";
-		std::cout << "yrote: 90도 (오른쪽), viewDir: (1, 0, 0)\n";
+		//std::cout << "Player pos: (" << player.centerPos.x << ", " 
+		//          << player.centerPos.y << ", " << player.centerPos.z << ")\\n";
+		//std::cout << "yrote: 90도 (오른쪽), viewDir: (1, 0, 0)\\n";
 		break;
 	}
 
