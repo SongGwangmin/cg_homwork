@@ -1,19 +1,16 @@
 #version 330 core
- layout (location = 0) in vec3 
-vPos; 
-//--- 위치 변수:attribute position 0
- layout (location = 1) in vec3 
-vColor; 
-//--- 컬러 변수:attribute position 1
- out vec3 out_Color;
- uniform mat4 viewTransform;
- uniform mat4 modelTransform;
- uniform mat4 projectionTransform;
- uniform vec3 blockcolor;
+ layout (location = 0) in vec3 vPos;
+ layout (location = 1) in vec3 vNormal;
+ out vec3 FragPos;  
+ out vec3 Normal;
+ uniform mat4 model;
+ uniform mat4 view;
+ uniform mat4 projection;
 
- void main(void) 
-{
- //--- 프래그먼트세이더에게전달
- gl_Position = projectionTransform * viewTransform * modelTransform * vec4(vPos, 1.0); 
- out_Color = blockcolor;
+ void main()
+ {
+	gl_Position = projection * view * model * vec4(vPos, 1.0);
+	FragPos = vec3(model * vec4(vPos, 1.0));
+	// 노말 벡터는 Normal Matrix를 사용하여 변환 (비균등 스케일에 대응)
+	Normal = mat3(transpose(inverse(model))) * vNormal;
  }
