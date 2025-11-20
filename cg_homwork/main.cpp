@@ -642,7 +642,29 @@ inline const BlockData& getBlockConst(int x, int z) {
 	return blockGrid[getBlockIndex(x, z)];
 }
 
+// 명령어 출력 함수
+void printCommands() {
+	system("cls"); // 콘솔 화면 지우기 (Windows 전용)
+	std::cout << "==================== [ 움직이는 산과 미로 만들기 ] ====================\n\n";
 
+	std::cout << "키보드 명령어:\n";
+	std::cout << "  o / p : 투영을 선택한다 (직각 투영 / 원근 투영)\n";
+	std::cout << "  z / Z : 원근 투영 시 z축으로 이동할 수 있게 한다.\n";
+	std::cout << "  m / M : 육면체들이 위/아래로 움직인다/멈춘다.\n";
+	std::cout << "  y / Y : 카메라가 바닥의 y축을 기준으로 양/음 방향으로 회전한다.\n";
+	std::cout << "  r     : 미로를 제작한다.\n";
+	std::cout << "  v     : 육면체들의 움직임이 멈추고 낮은 높이로 변한다.\n";
+	std::cout << "  s     : 미로에서 객체가 나타난다.\n";
+	std::cout << "  d     : 객체의 위치에서 출구로 가는 최단 경로만 남긴다.\n";
+	std::cout << "  → / ← / ↑ / ↓ : 객체를 미로에서 앞/뒤/좌/우 이동. (미니맵에서 객체 이동 확인 가능)\n";
+	std::cout << "  + / - : 육면체 이동하는 속도 증가/감소\n";
+	std::cout << "  1 / 3 : 카메라 시점 1인칭 / 3인칭 변환\n";
+	std::cout << "          (1인칭 시점 = 객체 시점, 3인칭 시점 = 쿼터뷰 시점)\n";
+	std::cout << "  c     : 모든 값 초기화\n";
+	std::cout << "  q     : 프로그램 종료\n\n";
+
+	std::cout << "=======================================================================\n";
+}
 
 /// 숫자 입력 받기 함수
 bool getValidInput(const char* prompt, int& value) {
@@ -834,6 +856,8 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	);
 	stickCube.sendVertexData(allVertices);
 	
+
+	printCommands();
 
 	//--- 세이더 프로그램 만들기
 
@@ -1490,7 +1514,7 @@ void Keyboard(unsigned char key, int x, int y) {
 	default:
 		break;
 	}
-
+	printCommands();
 	glutPostRedisplay();
 }
 
