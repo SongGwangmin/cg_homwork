@@ -646,7 +646,7 @@ inline const BlockData& getBlockConst(int x, int z) {
 
 /// 숫자 입력 받기 함수
 bool getValidInput(const char* prompt, int& value) {
-	//std::cout << prompt;
+	std::cout << prompt;
 	
 	if (!(std::cin >> value)) {
 		// 입력이 숫자가 아닌 경우
