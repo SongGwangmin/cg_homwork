@@ -443,6 +443,11 @@ void Setshortestpath() {
 		//std::cout << "플레이어의 맵 인덱스: " << playerIndex << std::endl;
 		//std::cout << "플레이어까지의 최단 거리: " << distances[playerIndex] << std::endl;
 
+		if (playerIndex == -1) {
+			// std::cout << "플레이어가 유효한 위치에 있지 않습니다.\n";
+			return;
+		}
+
 		makeshortestmaze(previous, playerIndex);
 
 		pushPlayerOutOfWalls();
