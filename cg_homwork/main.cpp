@@ -328,7 +328,7 @@ void makeshortestmaze(std::vector<int>& previous, int& playerIndex) { // 플레이�
 
 
 	
-	std::cout << playerIndex << " ";
+	//std::cout << playerIndex << " ";
 	if( playerIndex == previous[playerIndex] ) {
 		
 	}
@@ -440,8 +440,8 @@ void Setshortestpath() {
 			static_cast<int>((player.centerPos.x + worldmapsize / 2.0f) / (worldmapsize / gridWidth)),
 			static_cast<int>((player.centerPos.z + worldmapsize / 2.0f) / (worldmapsize / gridHeight))
 		);
-		std::cout << "플레이어의 맵 인덱스: " << playerIndex << std::endl;
-		std::cout << "플레이어까지의 최단 거리: " << distances[playerIndex] << std::endl;
+		//std::cout << "플레이어의 맵 인덱스: " << playerIndex << std::endl;
+		//std::cout << "플레이어까지의 최단 거리: " << distances[playerIndex] << std::endl;
 
 		makeshortestmaze(previous, playerIndex);
 
@@ -1284,20 +1284,20 @@ void Keyboard(unsigned char key, int x, int y) {
 	case 'p': // Perspective 투영
 	case 'P':
 		projectionToggle = 1;
-		std::cout << "Perspective 투영 모드\n";
+		//std::cout << "Perspective 투영 모드\n";
 		break;
 	case 'o': // Orthographic 투영
 	case 'O':
 		projectionToggle = 0;
-		std::cout << "Orthographic 투영 모드\n";
+		//std::cout << "Orthographic 투영 모드\n";
 		break;
 	case 'm': // 상하 움직임 시작
 		updowntoggle = 1;
-		std::cout << "상하 움직임 시작\n";
+		//std::cout << "상하 움직임 시작\n";
 		break;
 	case 'M': // 상하 움직임 정지
 		updowntoggle = 0;
-		std::cout << "상하 움직임 정지\n";
+		//std::cout << "상하 움직임 정지\n";
 		break;
 	case '+': // deltaHeight 증가
 		for (int z = 0; z < gridHeight; ++z) {
@@ -1306,7 +1306,7 @@ void Keyboard(unsigned char key, int x, int y) {
 				block.deltaHeight += 0.1f;
 			}
 		}
-		std::cout << "deltaHeight 0.1f 증가\n";
+		//std::cout << "deltaHeight 0.1f 증가\n";
 		break;
 	case '-': // deltaHeight 감소
 		for (int z = 0; z < gridHeight; ++z) {
@@ -1320,7 +1320,7 @@ void Keyboard(unsigned char key, int x, int y) {
 				}
 			}
 		}
-		std::cout << "deltaHeight 0.1f 감소\n";
+		//std::cout << "deltaHeight 0.1f 감소\n";
 		break;
 	case 'v': // nowheight 리셋
 	case 'V':
@@ -1330,18 +1330,18 @@ void Keyboard(unsigned char key, int x, int y) {
 				block.nowheight = 0.1f;
 			}
 		}
-		std::cout << "모든 블록의 nowheight를 0.1f로 리셋\n";
+		//std::cout << "모든 블록의 nowheight를 0.1f로 리셋\n";
 		break;
 	case 'y': // Y축 양의 방향으로 5도 회전
 	{
 		cameraAngleY += 5.0f;
-		std::cout << "카메라 Y축 +5도 회전\n";
+		//std::cout << "카메라 Y축 +5도 회전\n";
 	}
 	break;
 	case 'Y': // Y축 음의 방향으로 5도 회전
 	{
 		cameraAngleY -= 5.0f;
-		std::cout << "카메라 Y축 -5도 회전\n";
+		//std::cout << "카메라 Y축 -5도 회전\n";
 	}
 	break;
 	case 'z':
@@ -1383,7 +1383,7 @@ void Keyboard(unsigned char key, int x, int y) {
 		viewMode = 3;
 
 
-		std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
+		//std::cout << "초기화 완료: 카메라, 블록 높이, 움직임 정지\n";
 
 
 
@@ -1461,10 +1461,10 @@ void Keyboard(unsigned char key, int x, int y) {
 	case 'S':
 		if (mapsettoggle == 1) {
 			setPlayerPos();
-			std::cout << "플레이어 배치 완료!\n";
+			//std::cout << "플레이어 배치 완료!\n";
 		}
 		else {
-			std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
+			//std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
 		}
 		break;
 	case 'd':
@@ -1472,7 +1472,7 @@ void Keyboard(unsigned char key, int x, int y) {
 	{
 		if (mapsettoggle == 1) {
 			Setshortestpath();
-			std::cout << "Dijkstra 알고리즘으로 최단 경로 탐색 완료!\n";
+			//std::cout << "Dijkstra 알고리즘으로 최단 경로 탐색 완료!\n";
 		}
 		else {
 			std::cout << "먼저 'r' 키를 눌러 미로를 생성하세요.\n";
@@ -1481,11 +1481,11 @@ void Keyboard(unsigned char key, int x, int y) {
 		break;
 	case '1': // 1인칭 시점
 		viewMode = 1;
-		std::cout << "1인칭 시점으로 전환\n";
+		//std::cout << "1인칭 시점으로 전환\n";
 		break;
 	case '3': // 3인칭 시점
 		viewMode = 3;
-		std::cout << "3인칭 시점으로 전환\n";
+		//std::cout << "3인칭 시점으로 전환\n";
 		break;
 	default:
 		break;
