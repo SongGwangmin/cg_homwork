@@ -1056,6 +1056,8 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 			}
 		}
 
+		glm::vec3 playercolor(0.8f, 0.8f, 0.8f);
+		glUniform3fv(colorLocation, 1, glm::value_ptr(playercolor));
 		// Player Cube 그리기 (중심 위치로 이동)
 		if (runnerToggle == 1 && viewMode == 3) {
 			int startVertex = 36;
@@ -1203,6 +1205,9 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 				}
 			}
 		}
+
+		
+		glUniform3fv(colorLocation, 1, glm::value_ptr(playercolor));
 
 		// Player Cube 그리기 (중심 위치로 이동) - 두 번째 뷰포트
 		if (runnerToggle == 1) {
